@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Indianapolis Property Feed</title>
+<style>
+  :root{
+    --bg:#0f1115; --bg-alt:#161922; --card:#1b1f2a; --border:#2a2f3d;
+    --text:#e6e8ec; --text-dim:#8b93a7; --accent:#4f8cff;
+    --green:#1f9d55; --green-bg:#123321; --blue:#3877d6; --blue-bg:#101f38;
+    --yellow:#c99a1f; --yellow-bg:#2e2610; --red:#d94141; --red-bg:#331414;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);}
+  header{background:var(--bg-alt);border-bottom:1px solid var(--border);padding:16px 20px;position:sticky;top:0;z-index:10;}
+  header h1{margin:0 0 4px;font-size:20px;}
+  header p{margin:0;color:var(--text-dim);font-size:13px;}
+  .container{max-width:1400px;margin:0 auto;padding:16px 20px 60px;}
+
+  .apikey-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px;}
+  .apikey-bar input[type=password], .apikey-bar input[type=text]{flex:1;min-width:220px;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;}
+  button{cursor:pointer;font-family:inherit;font-size:13px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);padding:9px 14px;transition:background .15s,border-color .15s;}
+  button:hover{background:#232838;border-color:#3a4152;}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+  button.primary:hover{background:#3f78e0;}
+  button.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+  button:disabled{opacity:.5;cursor:not-allowed;}
+
+  .banner{margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13px;display:none;}
+  .banner.show{display:block;}
+  .banner.warn{background:var(--yellow-bg);color:#e8c96a;border:1px solid #4a3c15;}
+  .banner.error{background:var(--red-bg);color:#f1a3a3;border:1px solid #4a1e1e;}
+  .banner.info{background:var(--blue-bg);color:#a7c6f5;border:1px solid #1c3a63;}
+
+  .stats-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:16px;}
+  .stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;}
+  .stat .num{font-size:22px;font-weight:700;}
+  .stat .label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;margin-top:2px;}
+
+  .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:18px;align-items:flex-start;}
+  .control-group{display:flex;flex-direction:column;gap:6px;}
+  .control-group .gl{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;}
+  .btn-row{display:flex;gap:6px;flex-wrap:wrap;}
+  select{padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;}
+
+  .zip-toggles{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px;}
+  .zip-toggle{font-size:12px;padding:6px 10px;}
+  .zip-toggle .grade{opacity:.7;margin-left:4px;}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-top:20px;}
+  .card{background:var(--card);border:1px solid var(--border);border-left:4px solid var(--border);border-radius:10px;padding:14px;position:relative;display:flex;flex-direction:column;gap:8px;}
+  .card.score-80{border-left-color:var(--green);}
+  .card.score-60{border-left-color:var(--blue);}
+  .card.score-40{border-left-color:var(--yellow);}
+  .card.score-0{border-left-color:var(--red);}
+
+  .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .score-pill{font-size:18px;font-weight:800;padding:4px 10px;border-radius:8px;flex-shrink:0;}
+  .score-80 .score-pill{background:var(--green-bg);color:#5ed892;}
+  .score-60 .score-pill{background:var(--blue-bg);color:#7fb0f5;}
+  .score-40 .score-pill{background:var(--yellow-bg);color:#e8c96a;}
+  .score-0 .score-pill{background:var(--red-bg);color:#f1a3a3;}
+  .verdict{font-size:11px;text-transform:uppercase;letter-spacing:.03em;font-weight:700;margin-top:2px;}
+  .score-80 .verdict{color:#5ed892;}
+  .score-60 .verdict{color:#7fb0f5;}
+  .score-40 .verdict{color:#e8c96a;}
+  .score-0 .verdict{color:#f1a3a3;}
+
+  .address{font-size:15px;font-weight:600;line-height:1.3;}
+  .address .sub{display:block;font-size:12px;color:var(--text-dim);font-weight:400;margin-top:2px;}
+
+  .badges{display:flex;gap:6px;flex-wrap:wrap;}
+  .badge{font-size:10px;padding:3px 7px;border-radius:6px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;}
+  .badge.new{background:var(--accent);color:#fff;}
+  .badge.zip{background:var(--bg);border:1px solid var(--border);color:var(--text-dim);}
+
+  .price-row{font-size:20px;font-weight:700;}
+  .price-row .rentinfo{display:block;font-size:12px;font-weight:400;color:var(--text-dim);margin-top:2px;}
+
+  .facts{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--text-dim);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:8px 0;}
+  .facts b{color:var(--text);}
+
+  .card-actions{display:flex;gap:8px;margin-top:auto;flex-wrap:wrap;}
+  .card-actions a, .card-actions button{flex:1;text-align:center;text-decoration:none;font-size:12px;padding:8px 10px;}
+  .card-actions a{color:var(--text);}
+  .save-btn.saved{background:var(--yellow-bg);border-color:#4a3c15;color:#e8c96a;}
+
+  .empty-state{text-align:center;color:var(--text-dim);padding:60px 20px;font-size:14px;}
+  .loading{text-align:center;color:var(--text-dim);padding:40px;font-size:14px;}
+
+  footer{text-align:center;color:var(--text-dim);font-size:11px;padding:20px;}
+
+  @media (max-width:700px){
+    .stats-bar{grid-template-columns:repeat(2,1fr);}
+    .controls{flex-direction:column;}
+    .grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container" style="padding-bottom:0;">
+    <h1>Indianapolis Property Feed</h1>
+    <p>Live listings scored against your investment criteria &middot; 8 target ZIP codes</p>
+    <div class="apikey-bar">
+      <input type="password" id="apiKeyInput" placeholder="Paste your RapidAPI key (x-rapidapi-key)">
+      <button class="primary" id="saveKeyBtn">Save Key</button>
+      <button id="refreshBtn">Refresh Listings</button>
+      <button id="toggleDebugBtn" title="Show raw API response for troubleshooting">Debug</button>
+    </div>
+    <div class="banner" id="banner"></div>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="stats-bar">
+    <div class="stat"><div class="num" id="statTotal">0</div><div class="label">Total</div></div>
+    <div class="stat"><div class="num" id="statStrong">0</div><div class="label">Strong Buys</div></div>
+    <div class="stat"><div class="num" id="statNew">0</div><div class="label">New Today</div></div>
+    <div class="stat"><div class="num" id="statAvg">0</div><div class="label">Avg Score</div></div>
+    <div class="stat"><div class="num" id="statSaved">0</div><div class="label">Saved</div></div>
+  </div>
+
+  <div class="controls">
+    <div class="control-group">
+      <div class="gl">Filter</div>
+      <div class="btn-row" id="filterRow">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="strong">Strong Buy</button>
+        <button class="filter-btn" data-filter="worth">Worth Analyzing</button>
+        <button class="filter-btn" data-filter="new">New</button>
+        <button class="filter-btn" data-filter="saved">Saved</button>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="gl">Sort</div>
+      <select id="sortSelect">
+        <option value="score">Score (high to low)</option>
+        <option value="price_asc">Price (low to high)</option>
+        <option value="price_desc">Price (high to low)</option>
+        <option value="newest">Newest listed</option>
+        <option value="rent_ratio">Rent-to-price ratio</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="control-group" style="margin-top:14px;">
+    <div class="gl">ZIP Codes</div>
+    <div class="zip-toggles" id="zipToggles"></div>
+  </div>
+
+  <div id="content">
+    <div class="loading">Paste your API key above to load listings.</div>
+  </div>
+
+</div>
+
+<footer>Indianapolis Property Feed &middot; runs entirely in your browser, no server required</footer>
+
+<pre id="debugPanel" style="display:none;max-width:1400px;margin:0 auto 40px;padding:16px 20px;font-size:11px;white-space:pre-wrap;background:#0a0c10;border-top:1px solid var(--border);color:#8b93a7;"></pre>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Config ----------
+  const API_URL = "https://realtor-data1.p.rapidapi.com/property_list/";
+  const API_HOST = "realtor-data1.p.rapidapi.com";
+
+  const ZIPS = [
+    { zip:"46219", name:"Irvington",              grade:"A",  topTier:true,  rentBase:1380 },
+    { zip:"46237", name:"Perry Twp / S. Franklin", grade:"B+", topTier:true,  rentBase:1320 },
+    { zip:"46259", name:"I-65 South Emerson",      grade:"A-", topTier:true,  rentBase:1350 },
+    { zip:"46227", name:"Perry Township South",    grade:"B",  topTier:false, rentBase:1280 },
+    { zip:"46203", name:"Garfield Park",           grade:"B-", topTier:false, rentBase:1260 },
+    { zip:"46225", name:"SoBro",                   grade:"B-", topTier:false, rentBase:1260 },
+    { zip:"46217", name:"Perry Township West",     grade:"B-", topTier:false, rentBase:1290 },
+    { zip:"46107", name:"Beech Grove SW",          grade:"C+", topTier:false, rentBase:1240 },
+  ];
+  const ZIP_MAP = Object.fromEntries(ZIPS.map(z => [z.zip, z]));
+
+  const LS = {
+    apiKey: "ipf_apiKey",
+    seenIds: "ipf_seenIds",
+    savedIds: "ipf_savedIds",
+    hiddenZips: "ipf_hiddenZips",
+  };
+
+  // ---------- State ----------
+  let allProperties = [];   // scored + normalized
+  let seenIds = loadSet(LS.seenIds);
+  let savedIds = loadSet(LS.savedIds);
+  let hiddenZips = loadSet(LS.hiddenZips);
+  let currentFilter = "all";
+  let currentSort = "score";
+  let lastRawResponses = {};
+  let newIdsThisPull = new Set();
+  let usingSampleData = false;
+
+  function loadSet(key){
+    try { return new Set(JSON.parse(localStorage.getItem(key) || "[]")); }
+    catch(e){ return new Set(); }
+  }
+  function saveSet(key, set){
+    localStorage.setItem(key, JSON.stringify(Array.from(set)));
+  }
+
+  // ---------- DOM refs ----------
+  const apiKeyInput = document.getElementById("apiKeyInput");
+  const saveKeyBtn = document.getElementById("saveKeyBtn");
+  const refreshBtn = document.getElementById("refreshBtn");
+  const toggleDebugBtn = document.getElementById("toggleDebugBtn");
+  const debugPanel = document.getElementById("debugPanel");
+  const banner = document.getElementById("banner");
+  const content = document.getElementById("content");
+  const zipTogglesEl = document.getElementById("zipToggles");
+  const sortSelect = document.getElementById("sortSelect");
+
+  // ---------- Init ----------
+  const savedKey = localStorage.getItem(LS.apiKey);
+  if (savedKey) apiKeyInput.value = savedKey;
+
+  buildZipToggles();
+
+  saveKeyBtn.addEventListener("click", () => {
+    const key = apiKeyInput.value.trim();
+    if (!key) { showBanner("warn", "Enter a key before saving."); return; }
+    localStorage.setItem(LS.apiKey, key);
+    showBanner("info", "API key saved. Loading listings...");
+    fetchAll();
+  });
+
+  refreshBtn.addEventListener("click", fetchAll);
+
+  toggleDebugBtn.addEventListener("click", () => {
+    debugPanel.style.display = debugPanel.style.display === "none" ? "block" : "none";
+  });
+
+  sortSelect.addEventListener("change", () => {
+    currentSort = sortSelect.value;
+    render();
+  });
+
+  document.getElementById("filterRow").addEventListener("click", (e) => {
+    const btn = e.target.closest(".filter-btn");
+    if (!btn) return;
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentFilter = btn.dataset.filter;
+    render();
+  });
+
+  if (savedKey) {
+    fetchAll();
+  }
+
+  // ---------- Zip toggles ----------
+  function buildZipToggles(){
+    zipTogglesEl.innerHTML = "";
+    ZIPS.forEach(z => {
+      const btn = document.createElement("button");
+      btn.className = "zip-toggle" + (hiddenZips.has(z.zip) ? "" : " active");
+      btn.innerHTML = `${z.zip} &middot; ${z.name} <span class="grade">(${z.grade})</span>`;
+      btn.addEventListener("click", () => {
+        if (hiddenZips.has(z.zip)) hiddenZips.delete(z.zip);
+        else hiddenZips.add(z.zip);
+        saveSet(LS.hiddenZips, hiddenZips);
+        btn.classList.toggle("active");
+        render();
+      });
+      zipTogglesEl.appendChild(btn);
+    });
+  }
+
+  // ---------- Fetching ----------
+  async function fetchAll(){
+    const key = localStorage.getItem(LS.apiKey);
+    if (!key) { showBanner("warn", "Paste and save your API key first."); return; }
+
+    refreshBtn.disabled = true;
+    refreshBtn.textContent = "Loading...";
+    content.innerHTML = '<div class="loading">Pulling listings from 8 ZIP codes...</div>';
+    hideBanner();
+    usingSampleData = false;
+    lastRawResponses = {};
+
+    const results = await Promise.allSettled(ZIPS.map(z => fetchZip(z.zip, key)));
+
+    let combined = [];
+    let anySuccess = false;
+    let errors = [];
+
+    results.forEach((r, i) => {
+      const zip = ZIPS[i].zip;
+      if (r.status === "fulfilled") {
+        anySuccess = true;
+        combined = combined.concat(r.value);
+      } else {
+        errors.push(`${zip}: ${r.reason && r.reason.message ? r.reason.message : r.reason}`);
+      }
+    });
+
+    if (!anySuccess) {
+      usingSampleData = true;
+      combined = generateSampleData();
+      showBanner("error",
+        "API request failed for all ZIP codes — showing sample data so you can see the layout. " +
+        "First error: " + (errors[0] || "unknown") +
+        ". Common causes: wrong/invalid key, key not subscribed to this API on RapidAPI, or the API blocking direct browser (CORS) requests. " +
+        "Click \"Debug\" above after opening the browser console (F12) for more detail."
+      );
+    } else if (errors.length > 0) {
+      showBanner("warn", `Loaded listings, but ${errors.length} of 8 ZIP codes failed: ${errors.join(" | ")}`);
+    } else {
+      hideBanner();
+    }
+
+    processProperties(combined);
+    render();
+
+    refreshBtn.disabled = false;
+    refreshBtn.textContent = "Refresh Listings";
+    updateDebugPanel();
+  }
+
+  async function fetchZip(zip, key){
+    const body = {
+      query: { status: ["for_sale"], postal_code: zip },
+      limit: 50,
+      offset: 0,
+      sort: { direction: "desc", field: "list_date" }
+    };
+
+    let resp;
+    try {
+      resp = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "x-rapidapi-key": key,
+          "x-rapidapi-host": API_HOST,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+      });
+    } catch (networkErr) {
+      throw new Error("network/CORS error (" + networkErr.message + ")");
+    }
+
+    const text = await resp.text();
+    let json;
+    try { json = JSON.parse(text); } catch(e) { json = { raw: text }; }
+
+    lastRawResponses[zip] = { status: resp.status, body: json };
+
+    if (!resp.ok) {
+      throw new Error(`HTTP ${resp.status} — ${JSON.stringify(json).slice(0,200)}`);
+    }
+
+    const list = extractListingsArray(json);
+    return list.map(item => normalizeListing(item, zip));
+  }
+
+  // Try several common shapes used by realtor.com-schema clone APIs on RapidAPI.
+  function extractListingsArray(json){
+    const candidates = [
+      json,
+      json && json.data,
+      json && json.data && json.data.results,
+      json && json.data && json.data.home_search && json.data.home_search.results,
+      json && json.results,
+      json && json.properties,
+      json && json.listings,
+      json && json.homes,
+    ];
+    for (const c of candidates) {
+      if (Array.isArray(c)) return c;
+    }
+    return [];
+  }
+
+  function get(obj, paths, fallback){
+    for (const path of paths) {
+      const val = path.split(".").reduce((o,k) => (o && o[k] !== undefined ? o[k] : undefined), obj);
+      if (val !== undefined && val !== null && val !== "") return val;
+    }
+    return fallback;
+  }
+
+  function normalizeListing(item, queriedZip){
+    const id = get(item, ["property_id","listing_id","id","mls_id"], null) ||
+      (get(item, ["location.address.line"], "") + "-" + queriedZip);
+
+    const price = Number(get(item, ["list_price","price","description.list_price"], 0)) || 0;
+
+    const beds = Number(get(item, ["description.beds","beds","property.bedrooms"], 0)) || 0;
+    const baths = Number(get(item, ["description.baths","description.baths_consolidated","baths"], 0)) || 0;
+    const sqft = Number(get(item, ["description.sqft","building_size.size","sqft"], 0)) || 0;
+    const yearBuilt = Number(get(item, ["description.year_built","year_built"], 0)) || 0;
+    const propType = get(item, ["description.type","property_type"], "");
+
+    const addrLine = get(item, ["location.address.line","address.line","address_line","full_address"], "Address unavailable");
+    const city = get(item, ["location.address.city","address.city","city"], "Indianapolis");
+    const stateCode = get(item, ["location.address.state_code","address.state","state_code"], "IN");
+    const postalCode = get(item, ["location.address.postal_code","address.postal_code","postal_code"], queriedZip);
+
+    const listDateRaw = get(item, ["list_date","last_update_date","description.list_date"], null);
+
+    const photo = get(item, ["primary_photo.href","photos.0.href","thumbnail"], null);
+
+    const permalink = get(item, ["permalink","href","rdc_web_url"], null);
+    const realtorUrl = permalink
+      ? (permalink.startsWith("http") ? permalink : `https://www.realtor.com/realestateandhomes-detail/${permalink}`)
+      : `https://www.realtor.com/realestateandhomes-search/${encodeURIComponent(addrLine + " " + city + " " + stateCode + " " + postalCode)}`;
+
+    const zillowUrl = `https://www.zillow.com/homes/${encodeURIComponent(addrLine + " " + city + " " + stateCode + " " + postalCode)}_rb/`;
+
+    return {
+      id: String(id),
+      zip: queriedZip,
+      addrLine, city, stateCode, postalCode,
+      price, beds, baths, sqft, yearBuilt, propType,
+      listDateRaw,
+      photo, realtorUrl, zillowUrl,
+      _raw: item
+    };
+  }
+
+  // ---------- Scoring ----------
+  function scoreListing(p){
+    let score = 0;
+    const zipInfo = ZIP_MAP[p.zip] || { rentBase: 1300, topTier: false };
+
+    // Price 30 pts
+    if (p.price >= 130000 && p.price <= 175000) score += 30;
+
+    // Zip 25 / 15 / 0
+    if (zipInfo.topTier) score += 25;
+    else if (ZIP_MAP[p.zip]) score += 15;
+
+    // Bedrooms 15 / 5 / 0
+    if (p.beds >= 3) score += 15;
+    else if (p.beds === 2) score += 5;
+
+    // Estimated rent
+    let estRent = zipInfo.rentBase;
+    if (p.beds >= 4) estRent += 100;
+    if (p.sqft > 1400) estRent += 50;
+
+    const rentRatio = p.price > 0 ? (estRent / p.price) * 100 : 0;
+    if (rentRatio >= 0.85) score += 20;
+    else if (rentRatio >= 0.70) score += 12;
+    else score += 4;
+
+    // Days on market
+    let daysAgo = null;
+    if (p.listDateRaw) {
+      const d = new Date(p.listDateRaw);
+      if (!isNaN(d.getTime())) {
+        daysAgo = Math.floor((Date.now() - d.getTime()) / 86400000);
+      }
+    }
+    if (daysAgo !== null) {
+      if (daysAgo <= 3) score += 10;
+      else if (daysAgo <= 14) score += 5;
+    } else {
+      score += 5; // unknown list date — treat as mid-range, not penalized to zero
+    }
+
+    let verdict, verdictKey;
+    if (score >= 80) { verdict = "Strong Buy"; verdictKey = "strong"; }
+    else if (score >= 60) { verdict = "Worth Analyzing"; verdictKey = "worth"; }
+    else if (score >= 40) { verdict = "Proceed with Caution"; verdictKey = "caution"; }
+    else { verdict = "Pass"; verdictKey = "pass"; }
+
+    return { score, verdict, verdictKey, estRent, rentRatio, daysAgo };
+  }
+
+  function processProperties(list){
+    // de-dupe by id (in case a zip search returns overlapping results)
+    const byId = new Map();
+    list.forEach(p => { if (!byId.has(p.id)) byId.set(p.id, p); });
+    const deduped = Array.from(byId.values());
+
+    newIdsThisPull = new Set();
+    deduped.forEach(p => {
+      const s = scoreListing(p);
+      Object.assign(p, s);
+      p.isNew = !seenIds.has(p.id);
+      if (p.isNew) newIdsThisPull.add(p.id);
+      p.isSaved = savedIds.has(p.id);
+    });
+
+    allProperties = deduped;
+
+    // mark all as seen now (persist)
+    deduped.forEach(p => seenIds.add(p.id));
+    saveSet(LS.seenIds, seenIds);
+  }
+
+  // ---------- Rendering ----------
+  function scoreClass(score){
+    if (score >= 80) return "score-80";
+    if (score >= 60) return "score-60";
+    if (score >= 40) return "score-40";
+    return "score-0";
+  }
+
+  function getFiltered(){
+    return allProperties.filter(p => {
+      if (hiddenZips.has(p.zip)) return false;
+      if (currentFilter === "strong" && p.verdictKey !== "strong") return false;
+      if (currentFilter === "worth" && p.verdictKey !== "worth") return false;
+      if (currentFilter === "new" && !p.isNew) return false;
+      if (currentFilter === "saved" && !savedIds.has(p.id)) return false;
+      return true;
+    });
+  }
+
+  function getSorted(list){
+    const arr = list.slice();
+    switch(currentSort){
+      case "price_asc": arr.sort((a,b) => a.price - b.price); break;
+      case "price_desc": arr.sort((a,b) => b.price - a.price); break;
+      case "newest": arr.sort((a,b) => {
+        const da = a.listDateRaw ? new Date(a.listDateRaw).getTime() : 0;
+        const db = b.listDateRaw ? new Date(b.listDateRaw).getTime() : 0;
+        return db - da;
+      }); break;
+      case "rent_ratio": arr.sort((a,b) => b.rentRatio - a.rentRatio); break;
+      case "score":
+      default: arr.sort((a,b) => b.score - a.score);
+    }
+    return arr;
+  }
+
+  function render(){
+    updateStats();
+    const list = getSorted(getFiltered());
+
+    if (list.length === 0) {
+      content.innerHTML = '<div class="empty-state">No properties match the current filters.</div>';
+      return;
+    }
+
+    content.innerHTML = '<div class="grid" id="grid"></div>';
+    const grid = document.getElementById("grid");
+
+    list.forEach(p => {
+      const card = document.createElement("div");
+      card.className = "card " + scoreClass(p.score);
+
+      const zipInfo = ZIP_MAP[p.zip];
+      const daysLabel = p.daysAgo === null ? "date unknown" : (p.daysAgo === 0 ? "listed today" : `${p.daysAgo}d ago`);
+
+      card.innerHTML = `
+        <div class="card-top">
+          <div class="address">${escapeHtml(p.addrLine)}
+            <span class="sub">${escapeHtml(p.city)}, ${escapeHtml(p.stateCode)} ${escapeHtml(p.postalCode)}</span>
+          </div>
+          <div style="text-align:right;">
+            <div class="score-pill">${p.score}</div>
+            <div class="verdict">${p.verdict}</div>
+          </div>
+        </div>
+
+        <div class="badges">
+          ${p.isNew ? '<span class="badge new">New</span>' : ''}
+          <span class="badge zip">${p.zip} &middot; ${zipInfo ? zipInfo.grade : "?"}</span>
+          <span class="badge zip">${daysLabel}</span>
+        </div>
+
+        <div class="price-row">$${p.price.toLocaleString()}
+          <span class="rentinfo">Est. rent $${p.estRent.toLocaleString()}/mo &middot; ${p.rentRatio.toFixed(2)}% ratio</span>
+        </div>
+
+        <div class="facts">
+          <span><b>${p.beds || "?"}</b> bd</span>
+          <span><b>${p.baths || "?"}</b> ba</span>
+          <span><b>${p.sqft ? p.sqft.toLocaleString() : "?"}</b> sqft</span>
+          <span><b>${p.yearBuilt || "?"}</b> built</span>
+        </div>
+
+        <div class="card-actions">
+          <a href="${p.realtorUrl}" target="_blank" rel="noopener">Realtor.com</a>
+          <a href="${p.zillowUrl}" target="_blank" rel="noopener">Zillow</a>
+          <button class="save-btn ${p.isSaved ? 'saved' : ''}" data-id="${escapeHtml(p.id)}">${p.isSaved ? '★ Saved' : '☆ Save'}</button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+
+    grid.querySelectorAll(".save-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.id;
+        if (savedIds.has(id)) savedIds.delete(id); else savedIds.add(id);
+        saveSet(LS.savedIds, savedIds);
+        const p = allProperties.find(x => x.id === id);
+        if (p) p.isSaved = savedIds.has(id);
+        render();
+      });
+    });
+  }
+
+  function updateStats(){
+    const visible = allProperties.filter(p => !hiddenZips.has(p.zip));
+    const total = visible.length;
+    const strong = visible.filter(p => p.verdictKey === "strong").length;
+    const newToday = visible.filter(p => p.isNew).length;
+    const avg = total ? Math.round(visible.reduce((s,p) => s + p.score, 0) / total) : 0;
+    const saved = visible.filter(p => savedIds.has(p.id)).length;
+
+    document.getElementById("statTotal").textContent = total;
+    document.getElementById("statStrong").textContent = strong;
+    document.getElementById("statNew").textContent = newToday;
+    document.getElementById("statAvg").textContent = avg;
+    document.getElementById("statSaved").textContent = saved;
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, ch => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[ch]));
+  }
+
+  function showBanner(type, msg){
+    banner.className = "banner show " + type;
+    banner.textContent = msg;
+  }
+  function hideBanner(){
+    banner.className = "banner";
+    banner.textContent = "";
+  }
+
+  function updateDebugPanel(){
+    debugPanel.textContent = "usingSampleData: " + usingSampleData + "\n\n" +
+      JSON.stringify(lastRawResponses, null, 2).slice(0, 20000);
+  }
+
+  // ---------- Sample data fallback ----------
+  function generateSampleData(){
+    const samples = [];
+    const streets = ["N Ritter Ave","E Washington St","S Emerson Ave","E Southport Rd","S East St","E Troy Ave","S Meridian St","Churchman Ave"];
+    let n = 0;
+    ZIPS.forEach((z, zi) => {
+      const count = 3 + (zi % 3);
+      for (let i = 0; i < count; i++) {
+        n++;
+        const price = 125000 + Math.floor(Math.random() * 60000);
+        const beds = 2 + Math.floor(Math.random() * 3);
+        const sqft = 950 + Math.floor(Math.random() * 900);
+        const daysAgo = Math.floor(Math.random() * 20);
+        const listDate = new Date(Date.now() - daysAgo * 86400000).toISOString();
+        samples.push(normalizeListing({
+          property_id: `SAMPLE-${z.zip}-${i}`,
+          list_price: price,
+          list_date: listDate,
+          description: { beds, baths: 1 + Math.floor(Math.random()*2), sqft, year_built: 1945 + Math.floor(Math.random()*70), type: "single_family" },
+          location: { address: { line: `${1000 + n*7} ${streets[n % streets.length]}`, city: "Indianapolis", state_code: "IN", postal_code: z.zip } },
+          permalink: null
+        }, z.zip));
+      }
+    });
+    return samples;
+  }
+
+})();
+</script>
+</body>
+</html>
