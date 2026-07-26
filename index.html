@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f1115">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Indy Feed">
 <title>Indianapolis Property Feed</title>
 <style>
   :root{
@@ -12,14 +16,27 @@
     --yellow:#c99a1f; --yellow-bg:#2e2610; --red:#d94141; --red-bg:#331414;
   }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);}
-  header{background:var(--bg-alt);border-bottom:1px solid var(--border);padding:16px 20px;position:sticky;top:0;z-index:10;}
-  header h1{margin:0 0 4px;font-size:20px;}
+  html{-webkit-text-size-adjust:100%;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);
+    -webkit-tap-highlight-color:transparent;overscroll-behavior-y:none;}
+  header{background:var(--bg-alt);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;
+    padding:calc(14px + env(safe-area-inset-top)) 0 12px;}
+  header h1{margin:0 0 3px;font-size:20px;}
   header p{margin:0;color:var(--text-dim);font-size:13px;}
-  .container{max-width:1400px;margin:0 auto;padding:16px 20px 60px;}
+  .container{max-width:1400px;margin:0 auto;
+    padding-left:max(20px, env(safe-area-inset-left));
+    padding-right:max(20px, env(safe-area-inset-right));
+    padding-top:16px;
+    padding-bottom:calc(60px + env(safe-area-inset-bottom));}
+  header .container{padding-top:0;padding-bottom:0;}
 
   .apikey-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px;}
-  .apikey-bar input[type=password], .apikey-bar input[type=text]{flex:1;min-width:220px;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;}
+  .apikey-bar input[type=password], .apikey-bar input[type=text]{flex:1;min-width:200px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);
+    font-size:16px;/* 16px stops iOS Safari auto-zooming on focus */}
+  .key-saved-row{display:none;align-items:center;gap:10px;margin-top:12px;font-size:13px;color:var(--text-dim);}
+  .key-saved-row.show{display:flex;}
+  .key-saved-row .dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
+  .action-bar{display:flex;gap:8px;margin-top:10px;}
   button{cursor:pointer;font-family:inherit;font-size:13px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);padding:9px 14px;transition:background .15s,border-color .15s;}
   button:hover{background:#232838;border-color:#3a4152;}
   button.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
@@ -32,6 +49,9 @@
   .banner.warn{background:var(--yellow-bg);color:#e8c96a;border:1px solid #4a3c15;}
   .banner.error{background:var(--red-bg);color:#f1a3a3;border:1px solid #4a1e1e;}
   .banner.info{background:var(--blue-bg);color:#a7c6f5;border:1px solid #1c3a63;}
+  .banner details{margin-top:6px;}
+  .banner summary{cursor:pointer;font-size:12px;opacity:.85;}
+  .banner-details{margin-top:6px;font-size:12px;line-height:1.45;white-space:pre-wrap;opacity:.9;}
 
   .stats-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:16px;}
   .stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;}
@@ -42,11 +62,14 @@
   .control-group{display:flex;flex-direction:column;gap:6px;}
   .control-group .gl{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;}
   .btn-row{display:flex;gap:6px;flex-wrap:wrap;}
-  select{padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;}
+  select{padding:9px 10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:14px;}
 
   .zip-toggles{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px;}
   .zip-toggle{font-size:12px;padding:6px 10px;}
   .zip-toggle .grade{opacity:.7;margin-left:4px;}
+  .zip-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
+  .zip-head .zip-quick{display:none;gap:6px;}
+  .zip-head .zip-quick button{font-size:11px;padding:4px 8px;}
 
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-top:20px;}
   .card{background:var(--card);border:1px solid var(--border);border-left:4px solid var(--border);border-radius:10px;padding:14px;position:relative;display:flex;flex-direction:column;gap:8px;}
@@ -91,10 +114,65 @@
 
   footer{text-align:center;color:var(--text-dim);font-size:11px;padding:20px;}
 
+  /* ---------- Phone layout (iPhone SE 375px → Pro Max 430px) ---------- */
   @media (max-width:700px){
-    .stats-bar{grid-template-columns:repeat(2,1fr);}
-    .controls{flex-direction:column;}
-    .grid{grid-template-columns:1fr;}
+    .container{
+      padding-left:max(14px, env(safe-area-inset-left));
+      padding-right:max(14px, env(safe-area-inset-right));
+      padding-top:12px;
+    }
+    /* Not sticky on phones — a pinned header this tall would eat most of
+       the viewport while scrolling the listings. */
+    header{position:static;padding:calc(10px + env(safe-area-inset-top)) 0 10px;}
+    header h1{font-size:17px;}
+    header p{font-size:11.5px;}
+
+    /* Header collapses to a single compact action row once a key is stored */
+    .apikey-bar{margin-top:10px;gap:6px;}
+    .apikey-bar input[type=password], .apikey-bar input[type=text]{min-width:0;flex:1 1 100%;}
+    .apikey-bar #saveKeyBtn{flex:1;}
+    .action-bar{margin-top:8px;}
+    .action-bar button{flex:1;padding:10px 8px;}
+
+    .banner{font-size:12px;padding:9px 11px;margin-top:10px;max-height:30vh;overflow-y:auto;}
+
+    /* 5 stats stay on ONE row instead of wrapping to three */
+    .stats-bar{grid-template-columns:repeat(5,1fr);gap:5px;margin-top:12px;}
+    .stat{padding:8px 3px;border-radius:8px;}
+    .stat .num{font-size:16px;}
+    .stat .label{font-size:8px;letter-spacing:0;margin-top:1px;line-height:1.15;}
+
+    /* Filters scroll sideways on one line rather than stacking */
+    .controls{flex-direction:column;gap:10px;margin-top:14px;}
+    .control-group{width:100%;}
+    .btn-row{
+      flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;
+      scrollbar-width:none;-webkit-overflow-scrolling:touch;
+    }
+    .btn-row::-webkit-scrollbar{display:none;}
+    .filter-btn{flex:0 0 auto;padding:11px 13px;}
+    select{width:100%;}
+
+    /* Zip chips: drop the neighborhood name, keep zip + grade */
+    .zip-toggles{gap:5px;margin-top:10px;}
+    .zip-toggle{font-size:12px;padding:11px 9px;flex:1 1 auto;min-width:0;text-align:center;}
+    .zip-toggle .zip-name{display:none;}
+    .zip-head .zip-quick{display:flex;}
+
+    .grid{grid-template-columns:1fr;gap:10px;margin-top:16px;}
+    .card{padding:12px;gap:7px;}
+    .address{font-size:14.5px;}
+    .price-row{font-size:19px;}
+    .facts{gap:8px;font-size:11.5px;}
+    /* 44px minimum tap targets per iOS HIG */
+    .card-actions a, .card-actions button{padding:11px 8px;min-height:44px;display:flex;align-items:center;justify-content:center;}
+  }
+
+  /* Very narrow phones (iPhone SE / mini) */
+  @media (max-width:380px){
+    .stat .num{font-size:15px;}
+    .stat .label{font-size:7.5px;}
+    .zip-toggle{font-size:11px;padding:11px 6px;}
   }
 </style>
 </head>
@@ -104,9 +182,16 @@
   <div class="container" style="padding-bottom:0;">
     <h1>Indianapolis Property Feed</h1>
     <p>Live listings scored against your investment criteria &middot; 8 target ZIP codes</p>
-    <div class="apikey-bar">
-      <input type="password" id="apiKeyInput" placeholder="Paste your RapidAPI key (x-rapidapi-key)">
+    <div class="apikey-bar" id="apiKeyBar">
+      <input type="password" id="apiKeyInput" placeholder="Paste your RapidAPI key"
+             autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
       <button class="primary" id="saveKeyBtn">Save Key</button>
+    </div>
+    <div class="key-saved-row" id="keySavedRow">
+      <span class="dot"></span><span>API key saved</span>
+      <button id="changeKeyBtn">Change</button>
+    </div>
+    <div class="action-bar">
       <button id="refreshBtn">Refresh Listings</button>
       <button id="toggleDebugBtn" title="Show raw API response for troubleshooting">Debug</button>
     </div>
@@ -148,7 +233,13 @@
   </div>
 
   <div class="control-group" style="margin-top:14px;">
-    <div class="gl">ZIP Codes</div>
+    <div class="zip-head">
+      <div class="gl">ZIP Codes</div>
+      <div class="zip-quick">
+        <button id="zipAllBtn">All</button>
+        <button id="zipNoneBtn">None</button>
+      </div>
+    </div>
     <div class="zip-toggles" id="zipToggles"></div>
   </div>
 
@@ -210,6 +301,9 @@
 
   // ---------- DOM refs ----------
   const apiKeyInput = document.getElementById("apiKeyInput");
+  const apiKeyBar = document.getElementById("apiKeyBar");
+  const keySavedRow = document.getElementById("keySavedRow");
+  const changeKeyBtn = document.getElementById("changeKeyBtn");
   const saveKeyBtn = document.getElementById("saveKeyBtn");
   const refreshBtn = document.getElementById("refreshBtn");
   const toggleDebugBtn = document.getElementById("toggleDebugBtn");
@@ -221,16 +315,38 @@
 
   // ---------- Init ----------
   const savedKey = localStorage.getItem(LS.apiKey);
-  if (savedKey) apiKeyInput.value = savedKey;
+  if (savedKey) {
+    apiKeyInput.value = savedKey;
+    setKeyBarCollapsed(true);
+  }
 
   buildZipToggles();
+
+  // Collapse the key input once a key is stored — reclaims a big chunk of
+  // vertical space on a phone screen.
+  function setKeyBarCollapsed(collapsed){
+    apiKeyBar.style.display = collapsed ? "none" : "flex";
+    keySavedRow.classList.toggle("show", collapsed);
+  }
+
+  changeKeyBtn.addEventListener("click", () => {
+    setKeyBarCollapsed(false);
+    apiKeyInput.focus();
+    apiKeyInput.select();
+  });
 
   saveKeyBtn.addEventListener("click", () => {
     const key = apiKeyInput.value.trim();
     if (!key) { showBanner("warn", "Enter a key before saving."); return; }
     localStorage.setItem(LS.apiKey, key);
+    setKeyBarCollapsed(true);
+    apiKeyInput.blur(); // dismiss the iOS keyboard
     showBanner("info", "API key saved. Loading listings...");
     fetchAll();
+  });
+
+  apiKeyInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") saveKeyBtn.click();
   });
 
   refreshBtn.addEventListener("click", fetchAll);
@@ -263,7 +379,9 @@
     ZIPS.forEach(z => {
       const btn = document.createElement("button");
       btn.className = "zip-toggle" + (hiddenZips.has(z.zip) ? "" : " active");
-      btn.innerHTML = `${z.zip} &middot; ${z.name} <span class="grade">(${z.grade})</span>`;
+      // .zip-name is hidden on phones so the chips stay compact
+      btn.innerHTML = `${z.zip}<span class="zip-name"> &middot; ${z.name}</span> <span class="grade">(${z.grade})</span>`;
+      btn.title = `${z.zip} — ${z.name} (Grade ${z.grade})`;
       btn.addEventListener("click", () => {
         if (hiddenZips.has(z.zip)) hiddenZips.delete(z.zip);
         else hiddenZips.add(z.zip);
@@ -274,6 +392,20 @@
       zipTogglesEl.appendChild(btn);
     });
   }
+
+  document.getElementById("zipAllBtn").addEventListener("click", () => {
+    hiddenZips = new Set();
+    saveSet(LS.hiddenZips, hiddenZips);
+    buildZipToggles();
+    render();
+  });
+
+  document.getElementById("zipNoneBtn").addEventListener("click", () => {
+    hiddenZips = new Set(ZIPS.map(z => z.zip));
+    saveSet(LS.hiddenZips, hiddenZips);
+    buildZipToggles();
+    render();
+  });
 
   // ---------- Fetching ----------
   async function fetchAll(){
@@ -306,11 +438,10 @@
     if (!anySuccess) {
       usingSampleData = true;
       combined = generateSampleData();
-      showBanner("error",
-        "API request failed for all ZIP codes — showing sample data so you can see the layout. " +
-        "First error: " + (errors[0] || "unknown") +
-        ". Common causes: wrong/invalid key, key not subscribed to this API on RapidAPI, or the API blocking direct browser (CORS) requests. " +
-        "Click \"Debug\" above after opening the browser console (F12) for more detail."
+      showBanner("error", "API unavailable — showing sample data.",
+        "First error: " + (errors[0] || "unknown") + "\n\n" +
+        "Common causes: invalid key, key not subscribed to this API on RapidAPI, " +
+        "or the API blocking direct browser (CORS) requests. Tap \"Debug\" for the raw response."
       );
     } else if (errors.length > 0) {
       showBanner("warn", `Loaded listings, but ${errors.length} of 8 ZIP codes failed: ${errors.join(" | ")}`);
@@ -625,9 +756,25 @@
     }[ch]));
   }
 
-  function showBanner(type, msg){
+  // `details` is tucked behind a disclosure so a long error can't swallow
+  // the whole phone screen.
+  function showBanner(type, msg, details){
     banner.className = "banner show " + type;
-    banner.textContent = msg;
+    banner.textContent = "";
+    const line = document.createElement("div");
+    line.textContent = msg;
+    banner.appendChild(line);
+    if (details) {
+      const d = document.createElement("details");
+      const s = document.createElement("summary");
+      s.textContent = "Details";
+      const body = document.createElement("div");
+      body.className = "banner-details";
+      body.textContent = details;
+      d.appendChild(s);
+      d.appendChild(body);
+      banner.appendChild(d);
+    }
   }
   function hideBanner(){
     banner.className = "banner";
