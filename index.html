@@ -130,6 +130,23 @@
     background:var(--card);color:var(--text);font-family:inherit;font-size:13px;}
   .smart-paste-actions{display:flex;justify-content:flex-end;margin-top:8px;}
 
+  .shot-attach{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:14px;}
+  .shot-attach .gl{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
+  .shot-attach .hint{font-size:11px;color:var(--text-dim);margin:6px 0 0;}
+  .shot-dropzone{border:1.5px dashed var(--border);border-radius:8px;padding:16px;text-align:center;cursor:pointer;
+    color:var(--text-dim);font-size:12.5px;transition:border-color .15s,background .15s;}
+  .shot-dropzone:hover{border-color:var(--accent);}
+  .shot-dropzone.dragover{border-color:var(--accent);background:var(--blue-bg);}
+  .shot-preview-wrap{display:flex;align-items:center;gap:12px;text-align:left;}
+  .shot-preview-wrap img{width:72px;height:72px;object-fit:cover;border-radius:6px;flex-shrink:0;}
+  .shot-preview-wrap .shot-file-info{flex:1;font-size:12px;color:var(--text);}
+  .shot-actions{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap;}
+  .shot-ocr-status{font-size:12px;color:var(--text-dim);}
+  .shot-ocr-status.error{color:#f1a3a3;}
+
+  .card-photo{width:calc(100% + 28px);margin:-14px -14px 4px;height:150px;object-fit:cover;
+    border-radius:10px 10px 0 0;display:block;}
+
   .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .form-grid .full{grid-column:1 / -1;}
   .field label{display:block;font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;}
@@ -309,6 +326,26 @@
       </div>
     </div>
 
+    <div class="shot-attach">
+      <div class="gl">Screenshot (optional)</div>
+      <input type="file" id="shotFileInput" accept="image/*" style="display:none">
+      <div class="shot-dropzone" id="shotDropzone" tabindex="0">
+        <div id="shotPreviewWrap" class="shot-preview-wrap" style="display:none">
+          <img id="shotPreviewImg" alt="Attached screenshot preview">
+          <div class="shot-file-info">
+            <div id="shotFileName"></div>
+            <button type="button" id="shotRemoveBtn">Remove</button>
+          </div>
+        </div>
+        <div id="shotPlaceholder">Tap to choose a photo, drop one here, or paste (Ctrl/Cmd+V) a screenshot</div>
+      </div>
+      <div class="shot-actions">
+        <button type="button" id="shotExtractBtn" disabled>Extract text from photo</button>
+        <span class="shot-ocr-status" id="shotOcrStatus"></span>
+      </div>
+      <p class="hint">Text recognition runs entirely in your browser (via a small public library loaded on first use) — the image is never uploaded anywhere.</p>
+    </div>
+
     <form id="manualForm">
       <div class="form-grid">
         <div class="field full">
@@ -445,6 +482,15 @@
   const manualFormError = document.getElementById("manualFormError");
   const smartPasteInput = document.getElementById("smartPasteInput");
   const smartParseBtn = document.getElementById("smartParseBtn");
+  const shotFileInput = document.getElementById("shotFileInput");
+  const shotDropzone = document.getElementById("shotDropzone");
+  const shotPlaceholder = document.getElementById("shotPlaceholder");
+  const shotPreviewWrap = document.getElementById("shotPreviewWrap");
+  const shotPreviewImg = document.getElementById("shotPreviewImg");
+  const shotFileName = document.getElementById("shotFileName");
+  const shotRemoveBtn = document.getElementById("shotRemoveBtn");
+  const shotExtractBtn = document.getElementById("shotExtractBtn");
+  const shotOcrStatus = document.getElementById("shotOcrStatus");
 
   // ---------- Init ----------
   const savedKey = localStorage.getItem(LS.apiKey);
@@ -566,6 +612,7 @@
     manualForm.reset();
     smartPasteInput.value = "";
     manualFormError.classList.remove("show");
+    clearAttachedShot();
   }
 
   addManualBtn.addEventListener("click", openManualModal);
@@ -614,7 +661,7 @@
     return out;
   }
 
-  smartParseBtn.addEventListener("click", () => {
+  function applySmartParse(){
     const text = smartPasteInput.value.trim();
     if (!text) return;
     const parsed = smartParse(text);
@@ -636,6 +683,156 @@
     } else {
       manualFormError.classList.remove("show");
     }
+  }
+
+  smartParseBtn.addEventListener("click", applySmartParse);
+
+  // ---------- Screenshot attach + client-side OCR ----------
+  let attachedShotFile = null;        // original File, used for OCR (full resolution)
+  let attachedShotPreviewDataUrl = null; // downscaled copy, used for the on-card thumbnail + storage
+  let tesseractLoadPromise = null;
+
+  function resizeImageToDataUrl(file, maxDim, quality){
+    return new Promise((resolve, reject) => {
+      const objectUrl = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w >= h) { h = Math.round(h * maxDim / w); w = maxDim; }
+          else { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(objectUrl);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Couldn't read that image file.")); };
+      img.src = objectUrl;
+    });
+  }
+
+  async function handleShotFile(file){
+    if (!file || !file.type.startsWith("image/")) {
+      shotOcrStatus.textContent = "That doesn't look like an image file.";
+      shotOcrStatus.classList.add("error");
+      return;
+    }
+    shotOcrStatus.textContent = "";
+    shotOcrStatus.classList.remove("error");
+    try {
+      attachedShotPreviewDataUrl = await resizeImageToDataUrl(file, 480, 0.7);
+    } catch (err) {
+      shotOcrStatus.textContent = err.message;
+      shotOcrStatus.classList.add("error");
+      return;
+    }
+    attachedShotFile = file; // keep full-res original for OCR accuracy
+    shotPreviewImg.src = attachedShotPreviewDataUrl;
+    shotFileName.textContent = file.name || "Screenshot attached";
+    shotPreviewWrap.style.display = "flex";
+    shotPlaceholder.style.display = "none";
+    shotExtractBtn.disabled = false;
+  }
+
+  function clearAttachedShot(){
+    attachedShotFile = null;
+    attachedShotPreviewDataUrl = null;
+    shotFileInput.value = "";
+    shotPreviewWrap.style.display = "none";
+    shotPlaceholder.style.display = "block";
+    shotExtractBtn.disabled = true;
+    shotOcrStatus.textContent = "";
+    shotOcrStatus.classList.remove("error");
+  }
+
+  shotDropzone.addEventListener("click", () => shotFileInput.click());
+  shotDropzone.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); shotFileInput.click(); }
+  });
+  shotFileInput.addEventListener("change", () => {
+    if (shotFileInput.files[0]) handleShotFile(shotFileInput.files[0]);
+  });
+  shotRemoveBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    clearAttachedShot();
+  });
+
+  ["dragover","dragenter"].forEach(evt => {
+    shotDropzone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      shotDropzone.classList.add("dragover");
+    });
+  });
+  ["dragleave","dragend"].forEach(evt => {
+    shotDropzone.addEventListener(evt, () => shotDropzone.classList.remove("dragover"));
+  });
+  shotDropzone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    shotDropzone.classList.remove("dragover");
+    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (file) handleShotFile(file);
+  });
+
+  // Paste a screenshot straight from the clipboard while the modal is open.
+  document.addEventListener("paste", (e) => {
+    if (!manualModalOverlay.classList.contains("show")) return;
+    const items = e.clipboardData && e.clipboardData.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.kind === "file" && item.type.startsWith("image/")) {
+        const file = item.getAsFile();
+        if (file) { handleShotFile(file); e.preventDefault(); }
+        break;
+      }
+    }
+  });
+
+  function loadTesseract(){
+    if (window.Tesseract) return Promise.resolve();
+    if (tesseractLoadPromise) return tesseractLoadPromise;
+    tesseractLoadPromise = new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+      s.onload = () => resolve();
+      s.onerror = () => { tesseractLoadPromise = null; reject(new Error("couldn't load the OCR library — check your internet connection")); };
+      document.head.appendChild(s);
+    });
+    return tesseractLoadPromise;
+  }
+
+  shotExtractBtn.addEventListener("click", async () => {
+    if (!attachedShotFile) return;
+    shotExtractBtn.disabled = true;
+    shotOcrStatus.classList.remove("error");
+    shotOcrStatus.textContent = "Loading OCR engine (first time only)...";
+    try {
+      await loadTesseract();
+      shotOcrStatus.textContent = "Reading photo...";
+      const result = await Tesseract.recognize(attachedShotFile, "eng", {
+        logger: (m) => {
+          if (m.status === "recognizing text" && typeof m.progress === "number") {
+            shotOcrStatus.textContent = `Reading photo... ${Math.round(m.progress * 100)}%`;
+          }
+        }
+      });
+      const text = ((result && result.data && result.data.text) || "").trim();
+      if (!text) {
+        shotOcrStatus.textContent = "No readable text found in that photo. Try a clearer screenshot, or fill in the fields manually below.";
+        shotOcrStatus.classList.add("error");
+      } else {
+        smartPasteInput.value = text;
+        applySmartParse();
+        shotOcrStatus.textContent = "Text extracted — review the auto-filled fields below.";
+      }
+    } catch (err) {
+      shotOcrStatus.textContent = "Couldn't read this photo automatically (" + err.message + "). " +
+        "Fill in the fields manually while looking at the image above, or describe it to me in chat.";
+      shotOcrStatus.classList.add("error");
+    } finally {
+      shotExtractBtn.disabled = false;
+    }
   });
 
   manualForm.addEventListener("submit", (e) => {
@@ -655,6 +852,7 @@
       yearBuilt: Number(document.getElementById("mYear").value) || 0,
       listDateRaw: document.getElementById("mListDate").value || null,
       sourceUrl: document.getElementById("mSourceUrl").value.trim() || null,
+      photo: attachedShotPreviewDataUrl || null,
     };
 
     if (!form.addrLine || !form.postalCode || !form.price || !form.beds) {
@@ -859,7 +1057,7 @@
       price: form.price, beds: form.beds, baths: form.baths || 0,
       sqft: form.sqft || 0, yearBuilt: form.yearBuilt || 0, propType: "",
       listDateRaw: form.listDateRaw || null,
-      photo: null, realtorUrl, zillowUrl,
+      photo: form.photo || null, realtorUrl, zillowUrl,
       isManual: true,
       _raw: form
     };
@@ -993,6 +1191,7 @@
       const daysLabel = p.daysAgo === null ? "date unknown" : (p.daysAgo === 0 ? "listed today" : `${p.daysAgo}d ago`);
 
       card.innerHTML = `
+        ${p.photo ? `<img class="card-photo" src="${p.photo}" alt="">` : ''}
         <div class="card-top">
           <div class="address">${escapeHtml(p.addrLine)}
             <span class="sub">${escapeHtml(p.city)}, ${escapeHtml(p.stateCode)} ${escapeHtml(p.postalCode)}</span>
