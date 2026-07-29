@@ -222,6 +222,13 @@
       padding-bottom:calc(18px + env(safe-area-inset-bottom));}
     .form-grid{grid-template-columns:1fr;}
     .field input, .field select{font-size:16px;padding:11px 10px;}
+
+    /* 44px minimum tap targets per iOS HIG, applied to every modal control */
+    .modal button{min-height:44px;padding:10px 14px;}
+    .modal-head button{min-width:44px;}
+    .shot-preview-wrap{align-items:flex-start;}
+    .shot-actions{flex-direction:column;align-items:stretch;}
+    .shot-actions button{width:100%;}
   }
 
   /* Very narrow phones (iPhone SE / mini) */
@@ -337,7 +344,7 @@
             <button type="button" id="shotRemoveBtn">Remove</button>
           </div>
         </div>
-        <div id="shotPlaceholder">Tap to choose a photo, drop one here, or paste (Ctrl/Cmd+V) a screenshot</div>
+        <div id="shotPlaceholder">Tap to choose a photo, drag one here, or paste a copied screenshot</div>
       </div>
       <div class="shot-actions">
         <button type="button" id="shotExtractBtn" disabled>Extract text from photo</button>
