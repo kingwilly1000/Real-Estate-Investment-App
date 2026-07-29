@@ -96,6 +96,7 @@
   .badges{display:flex;gap:6px;flex-wrap:wrap;}
   .badge{font-size:10px;padding:3px 7px;border-radius:6px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;}
   .badge.new{background:var(--accent);color:#fff;}
+  .badge.manual{background:var(--yellow-bg);color:#e8c96a;}
   .badge.zip{background:var(--bg);border:1px solid var(--border);color:var(--text-dim);}
 
   .price-row{font-size:20px;font-weight:700;}
@@ -108,6 +109,38 @@
   .card-actions a, .card-actions button{flex:1;text-align:center;text-decoration:none;font-size:12px;padding:8px 10px;}
   .card-actions a{color:var(--text);}
   .save-btn.saved{background:var(--yellow-bg);border-color:#4a3c15;color:#e8c96a;}
+  .delete-btn{flex:0 0 auto !important;color:#f1a3a3;}
+  .delete-btn:hover{background:var(--red-bg);border-color:#4a1e1e;}
+
+  /* ---------- Manual add modal ---------- */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;
+    align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px 16px;}
+  .modal-overlay.show{display:flex;}
+  .modal{background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:520px;width:100%;
+    padding:18px;margin:auto 0;}
+  .modal h2{margin:0 0 4px;font-size:17px;}
+  .modal .modal-sub{margin:0 0 14px;font-size:12px;color:var(--text-dim);}
+  .modal-close{position:absolute;}
+  .modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .modal-head button{flex:0 0 auto;padding:6px 10px;}
+
+  .smart-paste{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:14px;}
+  .smart-paste .gl{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
+  .smart-paste textarea{width:100%;min-height:70px;resize:vertical;padding:8px;border-radius:6px;border:1px solid var(--border);
+    background:var(--card);color:var(--text);font-family:inherit;font-size:13px;}
+  .smart-paste-actions{display:flex;justify-content:flex-end;margin-top:8px;}
+
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .form-grid .full{grid-column:1 / -1;}
+  .field label{display:block;font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;}
+  .field input, .field select{width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--border);
+    background:var(--bg);color:var(--text);font-size:14px;}
+  .field input:invalid{border-color:var(--red);}
+
+  .modal-footer{display:flex;gap:8px;margin-top:16px;}
+  .modal-footer button{flex:1;}
+  .modal-error{color:#f1a3a3;font-size:12px;margin-top:8px;display:none;}
+  .modal-error.show{display:block;}
 
   .empty-state{text-align:center;color:var(--text-dim);padding:60px 20px;font-size:14px;}
   .loading{text-align:center;color:var(--text-dim);padding:40px;font-size:14px;}
@@ -166,6 +199,12 @@
     .facts{gap:8px;font-size:11.5px;}
     /* 44px minimum tap targets per iOS HIG */
     .card-actions a, .card-actions button{padding:11px 8px;min-height:44px;display:flex;align-items:center;justify-content:center;}
+
+    .modal-overlay{padding:0;align-items:stretch;}
+    .modal{border-radius:0;max-width:none;min-height:100%;margin:0;padding-top:calc(18px + env(safe-area-inset-top));
+      padding-bottom:calc(18px + env(safe-area-inset-bottom));}
+    .form-grid{grid-template-columns:1fr;}
+    .field input, .field select{font-size:16px;padding:11px 10px;}
   }
 
   /* Very narrow phones (iPhone SE / mini) */
@@ -193,6 +232,7 @@
     </div>
     <div class="action-bar">
       <button id="refreshBtn">Refresh Listings</button>
+      <button id="addManualBtn">+ Add Property</button>
       <button id="toggleDebugBtn" title="Show raw API response for troubleshooting">Debug</button>
     </div>
     <div class="banner" id="banner"></div>
@@ -244,12 +284,86 @@
   </div>
 
   <div id="content">
-    <div class="loading">Paste your API key above to load listings.</div>
+    <div class="loading">Paste your API key above to load listings, or use "+ Add Property" to enter one manually.</div>
   </div>
 
 </div>
 
 <footer>Indianapolis Property Feed &middot; runs entirely in your browser, no server required</footer>
+
+<div class="modal-overlay" id="manualModalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h2>Add Property Manually</h2>
+        <p class="modal-sub">For listings from a link or screenshot the API can't pull. Runs through the same scoring engine.</p>
+      </div>
+      <button id="manualModalCloseBtn">&times;</button>
+    </div>
+
+    <div class="smart-paste">
+      <div class="gl">Smart Paste (optional)</div>
+      <textarea id="smartPasteInput" placeholder="Paste text copied from a Zillow/Realtor.com listing page, or text I've given you from reading a screenshot — e.g. &quot;1420 E Troy Ave, Indianapolis, IN 46203 — $148,900 — 3 bd, 1 ba — 1,180 sqft — Built 1954&quot;"></textarea>
+      <div class="smart-paste-actions">
+        <button id="smartParseBtn">Auto-fill fields below</button>
+      </div>
+    </div>
+
+    <form id="manualForm">
+      <div class="form-grid">
+        <div class="field full">
+          <label for="mAddr">Address*</label>
+          <input type="text" id="mAddr" required placeholder="1420 E Troy Ave">
+        </div>
+        <div class="field">
+          <label for="mCity">City</label>
+          <input type="text" id="mCity" value="Indianapolis">
+        </div>
+        <div class="field">
+          <label for="mState">State</label>
+          <input type="text" id="mState" value="IN" maxlength="2">
+        </div>
+        <div class="field">
+          <label for="mZip">ZIP*</label>
+          <select id="mZip" required></select>
+        </div>
+        <div class="field">
+          <label for="mPrice">List Price*</label>
+          <input type="number" id="mPrice" required min="0" placeholder="148900">
+        </div>
+        <div class="field">
+          <label for="mBeds">Bedrooms*</label>
+          <input type="number" id="mBeds" required min="0" placeholder="3">
+        </div>
+        <div class="field">
+          <label for="mBaths">Bathrooms</label>
+          <input type="number" id="mBaths" min="0" step="0.5" placeholder="1">
+        </div>
+        <div class="field">
+          <label for="mSqft">Sqft</label>
+          <input type="number" id="mSqft" min="0" placeholder="1180">
+        </div>
+        <div class="field">
+          <label for="mYear">Year Built</label>
+          <input type="number" id="mYear" min="1800" max="2100" placeholder="1954">
+        </div>
+        <div class="field">
+          <label for="mListDate">Date Listed</label>
+          <input type="date" id="mListDate">
+        </div>
+        <div class="field full">
+          <label for="mSourceUrl">Source Link (Zillow / Realtor.com)</label>
+          <input type="url" id="mSourceUrl" placeholder="https://www.zillow.com/homedetails/...">
+        </div>
+      </div>
+      <div class="modal-error" id="manualFormError"></div>
+      <div class="modal-footer">
+        <button type="button" id="manualCancelBtn">Cancel</button>
+        <button type="submit" class="primary">Save Property</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <pre id="debugPanel" style="display:none;max-width:1400px;margin:0 auto 40px;padding:16px 20px;font-size:11px;white-space:pre-wrap;background:#0a0c10;border-top:1px solid var(--border);color:#8b93a7;"></pre>
 
@@ -278,10 +392,13 @@
     seenIds: "ipf_seenIds",
     savedIds: "ipf_savedIds",
     hiddenZips: "ipf_hiddenZips",
+    manualProperties: "ipf_manualProperties",
   };
 
   // ---------- State ----------
   let allProperties = [];   // scored + normalized
+  let apiRawProperties = [];      // last fetched/sample listings, unscored, refreshed by fetchAll()
+  let manualRawProperties = loadManualList(); // user-entered listings, unscored, persisted separately
   let seenIds = loadSet(LS.seenIds);
   let savedIds = loadSet(LS.savedIds);
   let hiddenZips = loadSet(LS.hiddenZips);
@@ -290,6 +407,7 @@
   let lastRawResponses = {};
   let newIdsThisPull = new Set();
   let usingSampleData = false;
+  let manualIdCounter = 0;
 
   function loadSet(key){
     try { return new Set(JSON.parse(localStorage.getItem(key) || "[]")); }
@@ -297,6 +415,13 @@
   }
   function saveSet(key, set){
     localStorage.setItem(key, JSON.stringify(Array.from(set)));
+  }
+  function loadManualList(){
+    try { return JSON.parse(localStorage.getItem(LS.manualProperties) || "[]"); }
+    catch(e){ return []; }
+  }
+  function saveManualList(){
+    localStorage.setItem(LS.manualProperties, JSON.stringify(manualRawProperties));
   }
 
   // ---------- DOM refs ----------
@@ -312,6 +437,14 @@
   const content = document.getElementById("content");
   const zipTogglesEl = document.getElementById("zipToggles");
   const sortSelect = document.getElementById("sortSelect");
+  const addManualBtn = document.getElementById("addManualBtn");
+  const manualModalOverlay = document.getElementById("manualModalOverlay");
+  const manualModalCloseBtn = document.getElementById("manualModalCloseBtn");
+  const manualCancelBtn = document.getElementById("manualCancelBtn");
+  const manualForm = document.getElementById("manualForm");
+  const manualFormError = document.getElementById("manualFormError");
+  const smartPasteInput = document.getElementById("smartPasteInput");
+  const smartParseBtn = document.getElementById("smartParseBtn");
 
   // ---------- Init ----------
   const savedKey = localStorage.getItem(LS.apiKey);
@@ -371,6 +504,10 @@
 
   if (savedKey) {
     fetchAll();
+  } else if (manualRawProperties.length > 0) {
+    // No API key yet, but the user has manually added properties — show those.
+    processProperties(manualRawProperties);
+    render();
   }
 
   // ---------- Zip toggles ----------
@@ -406,6 +543,141 @@
     buildZipToggles();
     render();
   });
+
+  // ---------- Manual property entry ----------
+  const mZipSelect = document.getElementById("mZip");
+  ZIPS.forEach(z => {
+    const opt = document.createElement("option");
+    opt.value = z.zip;
+    opt.textContent = `${z.zip} — ${z.name} (${z.grade})`;
+    mZipSelect.appendChild(opt);
+  });
+  const otherOpt = document.createElement("option");
+  otherOpt.value = "";
+  otherOpt.textContent = "Other (type below)";
+  mZipSelect.appendChild(otherOpt);
+
+  function openManualModal(){
+    manualModalOverlay.classList.add("show");
+    document.getElementById("mAddr").focus();
+  }
+  function closeManualModal(){
+    manualModalOverlay.classList.remove("show");
+    manualForm.reset();
+    smartPasteInput.value = "";
+    manualFormError.classList.remove("show");
+  }
+
+  addManualBtn.addEventListener("click", openManualModal);
+  manualModalCloseBtn.addEventListener("click", closeManualModal);
+  manualCancelBtn.addEventListener("click", closeManualModal);
+  manualModalOverlay.addEventListener("click", (e) => {
+    if (e.target === manualModalOverlay) closeManualModal();
+  });
+
+  // Best-effort regex extraction from freeform text — e.g. text copied off
+  // a listing page, or text typed out after reading a screenshot. Fields
+  // stay editable afterward since this is a rough parse, not a guarantee.
+  function smartParse(text){
+    const out = {};
+
+    const priceMatch = text.match(/\$\s?([\d]{1,3}(?:,\d{3})+|\d{5,7})/);
+    if (priceMatch) out.price = Number(priceMatch[1].replace(/,/g, ""));
+
+    const bedsMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:bd|bed(?:room)?s?)\b/i);
+    if (bedsMatch) out.beds = Number(bedsMatch[1]);
+
+    const bathsMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:ba|bath(?:room)?s?)\b/i);
+    if (bathsMatch) out.baths = Number(bathsMatch[1]);
+
+    const sqftMatch = text.match(/([\d]{1,3}(?:,\d{3})+|\d{3,6})\s*(?:sq\s?\.?\s?ft|sqft|square\s?feet)/i);
+    if (sqftMatch) out.sqft = Number(sqftMatch[1].replace(/,/g, ""));
+
+    const yearMatch = text.match(/(?:built|year\s?built)\D{0,6}(\d{4})/i) || text.match(/\b(18|19|20)\d{2}\b(?=\D*built)/i);
+    if (yearMatch) out.yearBuilt = Number(yearMatch[1].length === 4 ? yearMatch[1] : yearMatch[0]);
+
+    // Prefer one of our 8 target zips if present; else fall back to any 5-digit run.
+    const knownZip = ZIPS.map(z => z.zip).find(z => text.includes(z));
+    const anyZipMatch = text.match(/\b\d{5}\b/);
+    out.postalCode = knownZip || (anyZipMatch ? anyZipMatch[0] : "");
+
+    // Address: first line that starts with a street number.
+    const addrMatch = text.match(/^\s*(\d+\s+[A-Za-z0-9 .'-]+?)(?:,|\n|$)/m);
+    if (addrMatch) out.addrLine = addrMatch[1].trim();
+
+    const cityMatch = text.match(/,\s*([A-Za-z .'-]+?),\s*IN\b/);
+    if (cityMatch) out.city = cityMatch[1].trim();
+
+    const urlMatch = text.match(/https?:\/\/\S+/);
+    if (urlMatch) out.sourceUrl = urlMatch[0];
+
+    return out;
+  }
+
+  smartParseBtn.addEventListener("click", () => {
+    const text = smartPasteInput.value.trim();
+    if (!text) return;
+    const parsed = smartParse(text);
+
+    if (parsed.addrLine) document.getElementById("mAddr").value = parsed.addrLine;
+    if (parsed.city) document.getElementById("mCity").value = parsed.city;
+    if (parsed.postalCode) document.getElementById("mZip").value = parsed.postalCode;
+    if (parsed.price) document.getElementById("mPrice").value = parsed.price;
+    if (parsed.beds !== undefined) document.getElementById("mBeds").value = parsed.beds;
+    if (parsed.baths !== undefined) document.getElementById("mBaths").value = parsed.baths;
+    if (parsed.sqft) document.getElementById("mSqft").value = parsed.sqft;
+    if (parsed.yearBuilt) document.getElementById("mYear").value = parsed.yearBuilt;
+    if (parsed.sourceUrl) document.getElementById("mSourceUrl").value = parsed.sourceUrl;
+
+    const missing = ["addrLine","price","beds"].filter(k => !parsed[k]);
+    if (missing.length) {
+      manualFormError.textContent = "Auto-fill couldn't find: " + missing.join(", ") + ". Please fill those in manually and double check the rest.";
+      manualFormError.classList.add("show");
+    } else {
+      manualFormError.classList.remove("show");
+    }
+  });
+
+  manualForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    manualFormError.classList.remove("show");
+
+    const zipTyped = mZipSelect.value || (smartParse(smartPasteInput.value.trim()).postalCode) || "";
+    const form = {
+      addrLine: document.getElementById("mAddr").value.trim(),
+      city: document.getElementById("mCity").value.trim() || "Indianapolis",
+      stateCode: (document.getElementById("mState").value.trim() || "IN").toUpperCase(),
+      postalCode: zipTyped.trim(),
+      price: Number(document.getElementById("mPrice").value),
+      beds: Number(document.getElementById("mBeds").value),
+      baths: Number(document.getElementById("mBaths").value) || 0,
+      sqft: Number(document.getElementById("mSqft").value) || 0,
+      yearBuilt: Number(document.getElementById("mYear").value) || 0,
+      listDateRaw: document.getElementById("mListDate").value || null,
+      sourceUrl: document.getElementById("mSourceUrl").value.trim() || null,
+    };
+
+    if (!form.addrLine || !form.postalCode || !form.price || !form.beds) {
+      manualFormError.textContent = "Address, ZIP, price, and bedrooms are required.";
+      manualFormError.classList.add("show");
+      return;
+    }
+
+    const listing = normalizeManualEntry(form);
+    manualRawProperties.push(listing);
+    saveManualList();
+
+    processProperties(apiRawProperties.concat(manualRawProperties));
+    render();
+    closeManualModal();
+  });
+
+  function removeManualProperty(id){
+    manualRawProperties = manualRawProperties.filter(p => p.id !== id);
+    saveManualList();
+    processProperties(apiRawProperties.concat(manualRawProperties));
+    render();
+  }
 
   // ---------- Fetching ----------
   async function fetchAll(){
@@ -449,7 +721,8 @@
       hideBanner();
     }
 
-    processProperties(combined);
+    apiRawProperties = combined;
+    processProperties(apiRawProperties.concat(manualRawProperties));
     render();
 
     refreshBtn.disabled = false;
@@ -556,6 +829,39 @@
       listDateRaw,
       photo, realtorUrl, zillowUrl,
       _raw: item
+    };
+  }
+
+  // Builds the same normalized shape as normalizeListing(), but from a
+  // hand-entered form (see "Add Property Manually" modal) instead of an
+  // API item — used for listings the API can't pull (e.g. off-market
+  // finds, or properties pasted in from a link/screenshot).
+  function normalizeManualEntry(form){
+    const addrLine = form.addrLine || "Address unavailable";
+    const city = form.city || "Indianapolis";
+    const stateCode = form.stateCode || "IN";
+    const postalCode = form.postalCode;
+    const searchFallback = `https://www.zillow.com/homes/${encodeURIComponent(addrLine + " " + city + " " + stateCode + " " + postalCode)}_rb/`;
+    const realtorFallback = `https://www.realtor.com/realestateandhomes-search/${encodeURIComponent(addrLine + " " + city + " " + stateCode + " " + postalCode)}`;
+
+    let realtorUrl = realtorFallback;
+    let zillowUrl = searchFallback;
+    if (form.sourceUrl) {
+      if (/zillow\.com/i.test(form.sourceUrl)) zillowUrl = form.sourceUrl;
+      else if (/realtor\.com/i.test(form.sourceUrl)) realtorUrl = form.sourceUrl;
+      else realtorUrl = form.sourceUrl; // unknown source — surface it under the Realtor.com slot
+    }
+
+    return {
+      id: "manual-" + Date.now() + "-" + (manualIdCounter++),
+      zip: postalCode,
+      addrLine, city, stateCode, postalCode,
+      price: form.price, beds: form.beds, baths: form.baths || 0,
+      sqft: form.sqft || 0, yearBuilt: form.yearBuilt || 0, propType: "",
+      listDateRaw: form.listDateRaw || null,
+      photo: null, realtorUrl, zillowUrl,
+      isManual: true,
+      _raw: form
     };
   }
 
@@ -698,8 +1004,8 @@
         </div>
 
         <div class="badges">
-          ${p.isNew ? '<span class="badge new">New</span>' : ''}
-          <span class="badge zip">${p.zip} &middot; ${zipInfo ? zipInfo.grade : "?"}</span>
+          ${p.isManual ? '<span class="badge manual">Manual</span>' : (p.isNew ? '<span class="badge new">New</span>' : '')}
+          <span class="badge zip">${p.zip} &middot; ${zipInfo ? zipInfo.grade : "outside targets"}</span>
           <span class="badge zip">${daysLabel}</span>
         </div>
 
@@ -718,6 +1024,7 @@
           <a href="${p.realtorUrl}" target="_blank" rel="noopener">Realtor.com</a>
           <a href="${p.zillowUrl}" target="_blank" rel="noopener">Zillow</a>
           <button class="save-btn ${p.isSaved ? 'saved' : ''}" data-id="${escapeHtml(p.id)}">${p.isSaved ? '★ Saved' : '☆ Save'}</button>
+          ${p.isManual ? `<button class="delete-btn" data-id="${escapeHtml(p.id)}" title="Remove this manual entry">&times;</button>` : ''}
         </div>
       `;
       grid.appendChild(card);
@@ -732,6 +1039,10 @@
         if (p) p.isSaved = savedIds.has(id);
         render();
       });
+    });
+
+    grid.querySelectorAll(".delete-btn").forEach(btn => {
+      btn.addEventListener("click", () => removeManualProperty(btn.dataset.id));
     });
   }
 
