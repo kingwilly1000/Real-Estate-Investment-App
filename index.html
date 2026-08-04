@@ -30,13 +30,7 @@
     padding-bottom:calc(60px + env(safe-area-inset-bottom));}
   header .container{padding-top:0;padding-bottom:0;}
 
-  .apikey-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px;}
-  .apikey-bar input[type=password], .apikey-bar input[type=text]{flex:1;min-width:200px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);
-    font-size:16px;/* 16px stops iOS Safari auto-zooming on focus */}
-  .key-saved-row{display:none;align-items:center;gap:10px;margin-top:12px;font-size:13px;color:var(--text-dim);}
-  .key-saved-row.show{display:flex;}
-  .key-saved-row .dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
-  .action-bar{display:flex;gap:8px;margin-top:10px;}
+  .action-bar{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
   button{cursor:pointer;font-family:inherit;font-size:13px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);padding:9px 14px;transition:background .15s,border-color .15s;}
   button:hover{background:#232838;border-color:#3a4152;}
   button.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
@@ -49,13 +43,10 @@
   .banner.warn{background:var(--yellow-bg);color:#e8c96a;border:1px solid #4a3c15;}
   .banner.error{background:var(--red-bg);color:#f1a3a3;border:1px solid #4a1e1e;}
   .banner.info{background:var(--blue-bg);color:#a7c6f5;border:1px solid #1c3a63;}
-  .banner details{margin-top:6px;}
-  .banner summary{cursor:pointer;font-size:12px;opacity:.85;}
-  .banner-details{margin-top:6px;font-size:12px;line-height:1.45;white-space:pre-wrap;opacity:.9;}
 
   .stats-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:16px;}
   .stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;}
-  .stat .num{font-size:22px;font-weight:700;}
+  .stat .num{font-size:20px;font-weight:700;}
   .stat .label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;margin-top:2px;}
 
   .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:18px;align-items:flex-start;}
@@ -71,7 +62,7 @@
   .zip-head .zip-quick{display:none;gap:6px;}
   .zip-head .zip-quick button{font-size:11px;padding:4px 8px;}
 
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-top:20px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-top:20px;}
   .card{background:var(--card);border:1px solid var(--border);border-left:4px solid var(--border);border-radius:10px;padding:14px;position:relative;display:flex;flex-direction:column;gap:8px;}
   .card.score-80{border-left-color:var(--green);}
   .card.score-60{border-left-color:var(--blue);}
@@ -79,12 +70,12 @@
   .card.score-0{border-left-color:var(--red);}
 
   .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
-  .score-pill{font-size:18px;font-weight:800;padding:4px 10px;border-radius:8px;flex-shrink:0;}
+  .score-pill{font-size:15px;font-weight:800;padding:4px 10px;border-radius:8px;flex-shrink:0;white-space:nowrap;}
   .score-80 .score-pill{background:var(--green-bg);color:#5ed892;}
   .score-60 .score-pill{background:var(--blue-bg);color:#7fb0f5;}
   .score-40 .score-pill{background:var(--yellow-bg);color:#e8c96a;}
   .score-0 .score-pill{background:var(--red-bg);color:#f1a3a3;}
-  .verdict{font-size:11px;text-transform:uppercase;letter-spacing:.03em;font-weight:700;margin-top:2px;}
+  .verdict{font-size:11px;text-transform:uppercase;letter-spacing:.03em;font-weight:700;margin-top:2px;text-align:right;}
   .score-80 .verdict{color:#5ed892;}
   .score-60 .verdict{color:#7fb0f5;}
   .score-40 .verdict{color:#e8c96a;}
@@ -96,13 +87,19 @@
   .badges{display:flex;gap:6px;flex-wrap:wrap;}
   .badge{font-size:10px;padding:3px 7px;border-radius:6px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;}
   .badge.new{background:var(--accent);color:#fff;}
-  .badge.manual{background:var(--yellow-bg);color:#e8c96a;}
   .badge.zip{background:var(--bg);border:1px solid var(--border);color:var(--text-dim);}
 
-  .price-row{font-size:20px;font-weight:700;}
+  .price-row{font-size:19px;font-weight:700;}
   .price-row .rentinfo{display:block;font-size:12px;font-weight:400;color:var(--text-dim);margin-top:2px;}
 
-  .facts{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--text-dim);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:8px 0;}
+  .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:12.5px;color:var(--text-dim);
+    border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:8px 0;}
+  .metric-grid .m{display:flex;justify-content:space-between;gap:6px;}
+  .metric-grid b{color:var(--text);}
+  .metric-grid b.neg{color:#f1a3a3;}
+  .metric-grid b.pos{color:#5ed892;}
+
+  .facts{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--text-dim);}
   .facts b{color:var(--text);}
 
   .card-actions{display:flex;gap:8px;margin-top:auto;flex-wrap:wrap;}
@@ -112,17 +109,27 @@
   .delete-btn{flex:0 0 auto !important;color:#f1a3a3;}
   .delete-btn:hover{background:var(--red-bg);border-color:#4a1e1e;}
 
-  /* ---------- Manual add modal ---------- */
+  .empty-state{text-align:center;color:var(--text-dim);padding:60px 20px;font-size:14px;}
+  .empty-state button{margin-top:14px;}
+
+  footer{text-align:center;color:var(--text-dim);font-size:11px;padding:20px;}
+
+  /* ---------- Modals (Add/Edit property, Assumptions, Details) ---------- */
   .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;
     align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px 16px;}
   .modal-overlay.show{display:flex;}
-  .modal{background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:520px;width:100%;
+  .modal{background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:560px;width:100%;
     padding:18px;margin:auto 0;}
+  .modal.wide{max-width:680px;}
   .modal h2{margin:0 0 4px;font-size:17px;}
   .modal .modal-sub{margin:0 0 14px;font-size:12px;color:var(--text-dim);}
-  .modal-close{position:absolute;}
   .modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
   .modal-head button{flex:0 0 auto;padding:6px 10px;}
+
+  .form-section{margin-top:16px;}
+  .form-section:first-of-type{margin-top:4px;}
+  .form-section .sec-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+    color:var(--accent);border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:10px;}
 
   .smart-paste{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:14px;}
   .smart-paste .gl{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
@@ -150,19 +157,34 @@
   .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .form-grid .full{grid-column:1 / -1;}
   .field label{display:block;font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;}
+  .field .field-hint{display:block;font-size:10.5px;color:var(--text-dim);margin-top:3px;font-weight:400;text-transform:none;letter-spacing:0;}
   .field input, .field select{width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--border);
     background:var(--bg);color:var(--text);font-size:14px;}
   .field input:invalid{border-color:var(--red);}
+
+  .advanced-toggle{background:none;border:none;color:var(--accent);padding:4px 0;font-size:12.5px;text-decoration:underline;}
+  .advanced-fields{display:none;}
+  .advanced-fields.show{display:grid;}
 
   .modal-footer{display:flex;gap:8px;margin-top:16px;}
   .modal-footer button{flex:1;}
   .modal-error{color:#f1a3a3;font-size:12px;margin-top:8px;display:none;}
   .modal-error.show{display:block;}
 
-  .empty-state{text-align:center;color:var(--text-dim);padding:60px 20px;font-size:14px;}
-  .loading{text-align:center;color:var(--text-dim);padding:40px;font-size:14px;}
+  /* Details modal (read-only breakdown) */
+  .detail-row{display:flex;justify-content:space-between;gap:10px;padding:5px 0;font-size:13px;border-bottom:1px solid var(--border);}
+  .detail-row .lbl{color:var(--text-dim);}
+  .detail-row .val{font-weight:600;text-align:right;}
+  .detail-row.total{font-weight:700;border-bottom:2px solid var(--border);}
+  .detail-row .val.neg{color:#f1a3a3;}
+  .detail-row .val.pos{color:#5ed892;}
 
-  footer{text-align:center;color:var(--text-dim);font-size:11px;padding:20px;}
+  .test-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;font-size:13px;border-bottom:1px solid var(--border);}
+  .test-row .t-label{flex:1;}
+  .test-row .t-actual{color:var(--text-dim);font-size:12px;}
+  .test-pass, .test-fail{font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.03em;}
+  .test-pass{background:var(--green-bg);color:#5ed892;}
+  .test-fail{background:var(--red-bg);color:#f1a3a3;}
 
   /* ---------- Phone layout (iPhone SE 375px → Pro Max 430px) ---------- */
   @media (max-width:700px){
@@ -171,28 +193,20 @@
       padding-right:max(14px, env(safe-area-inset-right));
       padding-top:12px;
     }
-    /* Not sticky on phones — a pinned header this tall would eat most of
-       the viewport while scrolling the listings. */
     header{position:static;padding:calc(10px + env(safe-area-inset-top)) 0 10px;}
     header h1{font-size:17px;}
     header p{font-size:11.5px;}
 
-    /* Header collapses to a single compact action row once a key is stored */
-    .apikey-bar{margin-top:10px;gap:6px;}
-    .apikey-bar input[type=password], .apikey-bar input[type=text]{min-width:0;flex:1 1 100%;}
-    .apikey-bar #saveKeyBtn{flex:1;}
     .action-bar{margin-top:8px;}
-    .action-bar button{flex:1;padding:10px 8px;}
+    .action-bar button{flex:1;padding:10px 8px;min-height:44px;}
 
     .banner{font-size:12px;padding:9px 11px;margin-top:10px;max-height:30vh;overflow-y:auto;}
 
-    /* 5 stats stay on ONE row instead of wrapping to three */
     .stats-bar{grid-template-columns:repeat(5,1fr);gap:5px;margin-top:12px;}
     .stat{padding:8px 3px;border-radius:8px;}
-    .stat .num{font-size:16px;}
+    .stat .num{font-size:15px;}
     .stat .label{font-size:8px;letter-spacing:0;margin-top:1px;line-height:1.15;}
 
-    /* Filters scroll sideways on one line rather than stacking */
     .controls{flex-direction:column;gap:10px;margin-top:14px;}
     .control-group{width:100%;}
     .btn-row{
@@ -200,21 +214,19 @@
       scrollbar-width:none;-webkit-overflow-scrolling:touch;
     }
     .btn-row::-webkit-scrollbar{display:none;}
-    .filter-btn{flex:0 0 auto;padding:11px 13px;}
+    .filter-btn{flex:0 0 auto;padding:11px 13px;min-height:44px;}
     select{width:100%;}
 
-    /* Zip chips: drop the neighborhood name, keep zip + grade */
     .zip-toggles{gap:5px;margin-top:10px;}
-    .zip-toggle{font-size:12px;padding:11px 9px;flex:1 1 auto;min-width:0;text-align:center;}
+    .zip-toggle{font-size:12px;padding:11px 9px;flex:1 1 auto;min-width:0;text-align:center;min-height:44px;display:flex;align-items:center;justify-content:center;}
     .zip-toggle .zip-name{display:none;}
     .zip-head .zip-quick{display:flex;}
 
     .grid{grid-template-columns:1fr;gap:10px;margin-top:16px;}
     .card{padding:12px;gap:7px;}
     .address{font-size:14.5px;}
-    .price-row{font-size:19px;}
-    .facts{gap:8px;font-size:11.5px;}
-    /* 44px minimum tap targets per iOS HIG */
+    .price-row{font-size:18px;}
+    .metric-grid{font-size:12px;}
     .card-actions a, .card-actions button{padding:11px 8px;min-height:44px;display:flex;align-items:center;justify-content:center;}
 
     .modal-overlay{padding:0;align-items:stretch;}
@@ -223,7 +235,6 @@
     .form-grid{grid-template-columns:1fr;}
     .field input, .field select{font-size:16px;padding:11px 10px;}
 
-    /* 44px minimum tap targets per iOS HIG, applied to every modal control */
     .modal button{min-height:44px;padding:10px 14px;}
     .modal-head button{min-width:44px;}
     .shot-preview-wrap{align-items:flex-start;}
@@ -231,11 +242,10 @@
     .shot-actions button{width:100%;}
   }
 
-  /* Very narrow phones (iPhone SE / mini) */
   @media (max-width:380px){
-    .stat .num{font-size:15px;}
+    .stat .num{font-size:14px;}
     .stat .label{font-size:7.5px;}
-    .zip-toggle{font-size:11px;padding:11px 6px;}
+    .zip-toggle{font-size:11px;padding:11px 6px;min-height:44px;}
   }
 </style>
 </head>
@@ -244,20 +254,10 @@
 <header>
   <div class="container" style="padding-bottom:0;">
     <h1>Indianapolis Property Feed</h1>
-    <p>Live listings scored against your investment criteria &middot; 8 target ZIP codes</p>
-    <div class="apikey-bar" id="apiKeyBar">
-      <input type="password" id="apiKeyInput" placeholder="Paste your RapidAPI key"
-             autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
-      <button class="primary" id="saveKeyBtn">Save Key</button>
-    </div>
-    <div class="key-saved-row" id="keySavedRow">
-      <span class="dot"></span><span>API key saved</span>
-      <button id="changeKeyBtn">Change</button>
-    </div>
+    <p>Track properties you're researching &middot; full underwriting auto-calculated</p>
     <div class="action-bar">
-      <button id="refreshBtn">Refresh Listings</button>
-      <button id="addManualBtn">+ Add Property</button>
-      <button id="toggleDebugBtn" title="Show raw API response for troubleshooting">Debug</button>
+      <button class="primary" id="addPropertyBtn">+ Add Property</button>
+      <button id="assumptionsBtn">Assumptions</button>
     </div>
     <div class="banner" id="banner"></div>
   </div>
@@ -266,10 +266,10 @@
 <div class="container">
 
   <div class="stats-bar">
-    <div class="stat"><div class="num" id="statTotal">0</div><div class="label">Total</div></div>
+    <div class="stat"><div class="num" id="statTotal">0</div><div class="label">Tracked</div></div>
     <div class="stat"><div class="num" id="statStrong">0</div><div class="label">Strong Buys</div></div>
-    <div class="stat"><div class="num" id="statNew">0</div><div class="label">New Today</div></div>
-    <div class="stat"><div class="num" id="statAvg">0</div><div class="label">Avg Score</div></div>
+    <div class="stat"><div class="num" id="statAvgCF">$0</div><div class="label">Avg Cash Flow</div></div>
+    <div class="stat"><div class="num" id="statAvgCoC">0%</div><div class="label">Avg CoC Return</div></div>
     <div class="stat"><div class="num" id="statSaved">0</div><div class="label">Saved</div></div>
   </div>
 
@@ -279,24 +279,25 @@
       <div class="btn-row" id="filterRow">
         <button class="filter-btn active" data-filter="all">All</button>
         <button class="filter-btn" data-filter="strong">Strong Buy</button>
-        <button class="filter-btn" data-filter="worth">Worth Analyzing</button>
-        <button class="filter-btn" data-filter="new">New</button>
+        <button class="filter-btn" data-filter="worth">Worth a Look</button>
         <button class="filter-btn" data-filter="saved">Saved</button>
+        <button class="filter-btn" data-filter="new">Added Today</button>
       </div>
     </div>
     <div class="control-group">
       <div class="gl">Sort</div>
       <select id="sortSelect">
-        <option value="score">Score (high to low)</option>
+        <option value="score">Tests Passed</option>
+        <option value="cashflow">Cash Flow (high to low)</option>
+        <option value="coc">Cash-on-Cash (high to low)</option>
         <option value="price_asc">Price (low to high)</option>
         <option value="price_desc">Price (high to low)</option>
-        <option value="newest">Newest listed</option>
-        <option value="rent_ratio">Rent-to-price ratio</option>
+        <option value="newest">Newest Added</option>
       </select>
     </div>
   </div>
 
-  <div class="control-group" style="margin-top:14px;">
+  <div class="control-group" style="margin-top:14px;" id="zipSection">
     <div class="zip-head">
       <div class="gl">ZIP Codes</div>
       <div class="zip-quick">
@@ -308,21 +309,25 @@
   </div>
 
   <div id="content">
-    <div class="loading">Paste your API key above to load listings, or use "+ Add Property" to enter one manually.</div>
+    <div class="empty-state">
+      No properties tracked yet.
+      <br><button class="primary" id="emptyAddBtn">+ Add your first property</button>
+    </div>
   </div>
 
 </div>
 
 <footer>Indianapolis Property Feed &middot; runs entirely in your browser, no server required</footer>
 
-<div class="modal-overlay" id="manualModalOverlay">
+<!-- ===================== Add / Edit Property Modal ===================== -->
+<div class="modal-overlay" id="propModalOverlay">
   <div class="modal">
     <div class="modal-head">
       <div>
-        <h2>Add Property Manually</h2>
-        <p class="modal-sub">For listings from a link or screenshot the API can't pull. Runs through the same scoring engine.</p>
+        <h2 id="propModalTitle">Add Property</h2>
+        <p class="modal-sub">Enter what you know — every return metric below recalculates automatically.</p>
       </div>
-      <button id="manualModalCloseBtn">&times;</button>
+      <button id="propModalCloseBtn">&times;</button>
     </div>
 
     <div class="smart-paste">
@@ -353,105 +358,239 @@
       <p class="hint">Text recognition runs entirely in your browser (via a small public library loaded on first use) — the image is never uploaded anywhere.</p>
     </div>
 
-    <form id="manualForm">
-      <div class="form-grid">
-        <div class="field full">
-          <label for="mAddr">Address*</label>
-          <input type="text" id="mAddr" required placeholder="1420 E Troy Ave">
-        </div>
-        <div class="field">
-          <label for="mCity">City</label>
-          <input type="text" id="mCity" value="Indianapolis">
-        </div>
-        <div class="field">
-          <label for="mState">State</label>
-          <input type="text" id="mState" value="IN" maxlength="2">
-        </div>
-        <div class="field">
-          <label for="mZip">ZIP*</label>
-          <select id="mZip" required></select>
-        </div>
-        <div class="field">
-          <label for="mPrice">List Price*</label>
-          <input type="number" id="mPrice" required min="0" placeholder="148900">
-        </div>
-        <div class="field">
-          <label for="mBeds">Bedrooms*</label>
-          <input type="number" id="mBeds" required min="0" placeholder="3">
-        </div>
-        <div class="field">
-          <label for="mBaths">Bathrooms</label>
-          <input type="number" id="mBaths" min="0" step="0.5" placeholder="1">
-        </div>
-        <div class="field">
-          <label for="mSqft">Sqft</label>
-          <input type="number" id="mSqft" min="0" placeholder="1180">
-        </div>
-        <div class="field">
-          <label for="mYear">Year Built</label>
-          <input type="number" id="mYear" min="1800" max="2100" placeholder="1954">
-        </div>
-        <div class="field">
-          <label for="mListDate">Date Listed</label>
-          <input type="date" id="mListDate">
-        </div>
-        <div class="field full">
-          <label for="mSourceUrl">Source Link (Zillow / Realtor.com)</label>
-          <input type="url" id="mSourceUrl" placeholder="https://www.zillow.com/homedetails/...">
+    <form id="propForm">
+      <div class="form-section">
+        <div class="sec-title">1. Property</div>
+        <div class="form-grid">
+          <div class="field full">
+            <label for="pAddr">Address*</label>
+            <input type="text" id="pAddr" required placeholder="1420 E Troy Ave">
+          </div>
+          <div class="field">
+            <label for="pCity">City</label>
+            <input type="text" id="pCity" value="Indianapolis">
+          </div>
+          <div class="field">
+            <label for="pZip">ZIP*</label>
+            <select id="pZip" required></select>
+          </div>
+          <div class="field">
+            <label for="pNeighborhood">Neighborhood</label>
+            <input type="text" id="pNeighborhood" placeholder="Irvington">
+          </div>
+          <div class="field">
+            <label for="pBeds">Beds</label>
+            <input type="number" id="pBeds" min="0" placeholder="3">
+          </div>
+          <div class="field">
+            <label for="pBaths">Baths</label>
+            <input type="number" id="pBaths" min="0" step="any" placeholder="1.5">
+          </div>
+          <div class="field">
+            <label for="pSqft">Square Feet</label>
+            <input type="number" id="pSqft" min="0" placeholder="1150">
+          </div>
+          <div class="field">
+            <label for="pYear">Year Built</label>
+            <input type="number" id="pYear" min="1800" max="2100" placeholder="1948">
+          </div>
+          <div class="field full">
+            <label for="pMlsLink">MLS # / Link</label>
+            <input type="text" id="pMlsLink" placeholder="MLS# 12345 or a listing URL">
+          </div>
         </div>
       </div>
-      <div class="modal-error" id="manualFormError"></div>
+
+      <div class="form-section">
+        <div class="sec-title">2. Purchase &amp; Financing</div>
+        <div class="form-grid">
+          <div class="field">
+            <label for="pListPrice">List Price</label>
+            <input type="number" id="pListPrice" min="0" placeholder="159900">
+          </div>
+          <div class="field">
+            <label for="pPurchasePrice">Purchase Price (your offer)*</label>
+            <input type="number" id="pPurchasePrice" required min="0" placeholder="155000">
+          </div>
+          <div class="field full">
+            <label for="pRehab">Rehab / Make-Ready Budget</label>
+            <input type="number" id="pRehab" min="0" placeholder="8000">
+          </div>
+        </div>
+        <p class="hint" style="margin-top:8px;">Down payment %, interest rate, loan term, closing costs %, and reserves come from your <strong>Assumptions</strong> — set them once, they apply to every property.</p>
+      </div>
+
+      <div class="form-section">
+        <div class="sec-title">3. Income (Monthly)</div>
+        <div class="form-grid">
+          <div class="field full">
+            <label for="pRent">Gross Monthly Rent (comped)*</label>
+            <input type="number" id="pRent" required min="0" placeholder="1400">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="sec-title">4. Operating Expenses</div>
+        <div class="form-grid">
+          <div class="field">
+            <label for="pTaxes">Annual Property Taxes</label>
+            <input type="number" id="pTaxes" min="0" placeholder="2100">
+          </div>
+          <div class="field">
+            <label for="pInsurance">Annual Insurance</label>
+            <input type="number" id="pInsurance" min="0" placeholder="1400">
+          </div>
+        </div>
+        <button type="button" class="advanced-toggle" id="advancedToggleBtn">+ Show other expenses (HOA, other income, etc.)</button>
+        <div class="form-grid advanced-fields" id="advancedFields">
+          <div class="field">
+            <label for="pOtherIncome">Other Income (monthly)</label>
+            <input type="number" id="pOtherIncome" min="0" placeholder="0">
+          </div>
+          <div class="field">
+            <label for="pHoa">HOA (monthly)</label>
+            <input type="number" id="pHoa" min="0" placeholder="0">
+          </div>
+          <div class="field">
+            <label for="pLawn">Lawn / Snow / Trash (monthly)</label>
+            <input type="number" id="pLawn" min="0" placeholder="0">
+          </div>
+          <div class="field">
+            <label for="pOwnerUtil">Owner-Paid Utilities (monthly)</label>
+            <input type="number" id="pOwnerUtil" min="0" placeholder="0">
+          </div>
+          <div class="field full">
+            <label for="pMisc">Other / Misc (monthly)</label>
+            <input type="number" id="pMisc" min="0" placeholder="0">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-error" id="propFormError"></div>
       <div class="modal-footer">
-        <button type="button" id="manualCancelBtn">Cancel</button>
-        <button type="submit" class="primary">Save Property</button>
+        <button type="button" id="propCancelBtn">Cancel</button>
+        <button type="submit" class="primary" id="propSaveBtn">Save Property</button>
       </div>
     </form>
   </div>
 </div>
 
-<pre id="debugPanel" style="display:none;max-width:1400px;margin:0 auto 40px;padding:16px 20px;font-size:11px;white-space:pre-wrap;background:#0a0c10;border-top:1px solid var(--border);color:#8b93a7;"></pre>
+<!-- ===================== Assumptions Modal ===================== -->
+<div class="modal-overlay" id="assumptionsModalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h2>Assumptions</h2>
+        <p class="modal-sub">Change these once — every tracked property recalculates.</p>
+      </div>
+      <button id="assumptionsCloseBtn">&times;</button>
+    </div>
+    <form id="assumptionsForm">
+      <div class="form-section">
+        <div class="sec-title">Financing</div>
+        <div class="form-grid">
+          <div class="field"><label for="aDownPct">Down Payment %</label><input type="number" id="aDownPct" step="any" min="0" max="1"></div>
+          <div class="field"><label for="aRate">Interest Rate (annual)</label><input type="number" id="aRate" step="any" min="0" max="1"></div>
+          <div class="field"><label for="aTerm">Loan Term (years)</label><input type="number" id="aTerm" step="1" min="1"></div>
+          <div class="field"><label for="aClosingPct">Closing Costs %</label><input type="number" id="aClosingPct" step="any" min="0" max="1"></div>
+          <div class="field full"><label for="aReserves">Reserves Held at Close ($)</label><input type="number" id="aReserves" step="any" min="0"></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="sec-title">Operating Assumptions</div>
+        <div class="form-grid">
+          <div class="field"><label for="aVacancy">Vacancy Rate</label><input type="number" id="aVacancy" step="any" min="0" max="1"></div>
+          <div class="field"><label for="aPm">Property Management %</label><input type="number" id="aPm" step="any" min="0" max="1"></div>
+          <div class="field"><label for="aMaint">Maintenance %</label><input type="number" id="aMaint" step="any" min="0" max="1"></div>
+          <div class="field"><label for="aCapex">CapEx Reserve %</label><input type="number" id="aCapex" step="any" min="0" max="1"></div>
+          <div class="field"><label for="aLeasing">Leasing / Turnover %</label><input type="number" id="aLeasing" step="any" min="0" max="1"></div>
+          <div class="field"><label for="aAppreciation">Annual Appreciation</label><input type="number" id="aAppreciation" step="any" min="0" max="1"></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="sec-title">Buy Criteria (used by the scorecard)</div>
+        <div class="form-grid">
+          <div class="field"><label for="aMinCF">Min Monthly Cash Flow ($)</label><input type="number" id="aMinCF" step="any"></div>
+          <div class="field"><label for="aMinCoC">Min Cash-on-Cash Return</label><input type="number" id="aMinCoC" step="any"></div>
+          <div class="field"><label for="aMinCap">Min Cap Rate</label><input type="number" id="aMinCap" step="any"></div>
+          <div class="field"><label for="aMinDscr">Min DSCR</label><input type="number" id="aMinDscr" step="any"></div>
+          <div class="field"><label for="aMin1pct">Min 1% Rule</label><input type="number" id="aMin1pct" step="any"></div>
+          <div class="field"><label for="aMaxAllIn">Max All-In Cost ($)</label><input type="number" id="aMaxAllIn" step="any"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="assumptionsResetBtn">Reset to Defaults</button>
+        <button type="submit" class="primary">Save Assumptions</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== Details Modal (read-only) ===================== -->
+<div class="modal-overlay" id="detailsModalOverlay">
+  <div class="modal wide">
+    <div class="modal-head">
+      <div>
+        <h2 id="detailsTitle">Property Details</h2>
+        <p class="modal-sub" id="detailsSub"></p>
+      </div>
+      <button id="detailsCloseBtn">&times;</button>
+    </div>
+    <div id="detailsBody"></div>
+  </div>
+</div>
 
 <script>
 (function(){
   "use strict";
 
-  // ---------- Config ----------
-  const API_URL = "https://realtor-data1.p.rapidapi.com/property_list/";
-  const API_HOST = "realtor-data1.p.rapidapi.com";
-
+  // ---------- Reference data (informational only — not used in scoring) ----------
   const ZIPS = [
-    { zip:"46219", name:"Irvington",              grade:"A",  topTier:true,  rentBase:1380 },
-    { zip:"46237", name:"Perry Twp / S. Franklin", grade:"B+", topTier:true,  rentBase:1320 },
-    { zip:"46259", name:"I-65 South Emerson",      grade:"A-", topTier:true,  rentBase:1350 },
-    { zip:"46227", name:"Perry Township South",    grade:"B",  topTier:false, rentBase:1280 },
-    { zip:"46203", name:"Garfield Park",           grade:"B-", topTier:false, rentBase:1260 },
-    { zip:"46225", name:"SoBro",                   grade:"B-", topTier:false, rentBase:1260 },
-    { zip:"46217", name:"Perry Township West",     grade:"B-", topTier:false, rentBase:1290 },
-    { zip:"46107", name:"Beech Grove SW",          grade:"C+", topTier:false, rentBase:1240 },
+    { zip:"46219", name:"Irvington",              grade:"A"  },
+    { zip:"46237", name:"Perry Twp / S. Franklin", grade:"A+" },
+    { zip:"46259", name:"I-65 South Emerson",      grade:"A-" },
+    { zip:"46227", name:"Perry Township South",    grade:"B"  },
+    { zip:"46203", name:"Garfield Park",           grade:"B-" },
+    { zip:"46225", name:"SoBro",                   grade:"B-" },
+    { zip:"46217", name:"Perry Township West",     grade:"B-" },
+    { zip:"46107", name:"Beech Grove SW",          grade:"C+" },
   ];
   const ZIP_MAP = Object.fromEntries(ZIPS.map(z => [z.zip, z]));
 
+  const DEFAULT_ASSUMPTIONS = {
+    downPaymentPct: 0.25,
+    interestRate: 0.0725,
+    loanTermYears: 30,
+    closingCostsPct: 0.03,
+    reservesAtClose: 5000,
+    vacancyPct: 0.08,
+    pmPct: 0.09,
+    maintenancePct: 0.08,
+    capexPct: 0.08,
+    leasingPct: 0.04,
+    appreciationPct: 0.03,
+    minMonthlyCashFlow: 200,
+    minCoCReturn: 0.08,
+    minCapRate: 0.07,
+    minDSCR: 1.25,
+    min1PctRule: 0.009,
+    maxAllInCost: 175000,
+  };
+
   const LS = {
-    apiKey: "ipf_apiKey",
-    seenIds: "ipf_seenIds",
-    savedIds: "ipf_savedIds",
-    hiddenZips: "ipf_hiddenZips",
-    manualProperties: "ipf_manualProperties",
+    properties: "iuw_properties",
+    assumptions: "iuw_assumptions",
+    hiddenZips: "iuw_hiddenZips",
   };
 
   // ---------- State ----------
-  let allProperties = [];   // scored + normalized
-  let apiRawProperties = [];      // last fetched/sample listings, unscored, refreshed by fetchAll()
-  let manualRawProperties = loadManualList(); // user-entered listings, unscored, persisted separately
-  let seenIds = loadSet(LS.seenIds);
-  let savedIds = loadSet(LS.savedIds);
+  let properties = loadProperties();
+  let assumptions = loadAssumptions();
   let hiddenZips = loadSet(LS.hiddenZips);
   let currentFilter = "all";
   let currentSort = "score";
-  let lastRawResponses = {};
-  let newIdsThisPull = new Set();
-  let usingSampleData = false;
-  let manualIdCounter = 0;
+  let editingId = null;
 
   function loadSet(key){
     try { return new Set(JSON.parse(localStorage.getItem(key) || "[]")); }
@@ -460,33 +599,167 @@
   function saveSet(key, set){
     localStorage.setItem(key, JSON.stringify(Array.from(set)));
   }
-  function loadManualList(){
-    try { return JSON.parse(localStorage.getItem(LS.manualProperties) || "[]"); }
+  function loadProperties(){
+    try { return JSON.parse(localStorage.getItem(LS.properties) || "[]"); }
     catch(e){ return []; }
   }
-  function saveManualList(){
-    localStorage.setItem(LS.manualProperties, JSON.stringify(manualRawProperties));
+  function saveProperties(){
+    localStorage.setItem(LS.properties, JSON.stringify(properties));
+  }
+  function loadAssumptions(){
+    try {
+      const stored = JSON.parse(localStorage.getItem(LS.assumptions) || "null");
+      return stored ? Object.assign({}, DEFAULT_ASSUMPTIONS, stored) : Object.assign({}, DEFAULT_ASSUMPTIONS);
+    } catch(e){ return Object.assign({}, DEFAULT_ASSUMPTIONS); }
+  }
+  function saveAssumptions(){
+    localStorage.setItem(LS.assumptions, JSON.stringify(assumptions));
+  }
+
+  function fmtMoney(n){
+    if (n === null || n === undefined || isNaN(n)) return "—";
+    const sign = n < 0 ? "-" : "";
+    return sign + "$" + Math.round(Math.abs(n)).toLocaleString();
+  }
+  function fmtPct(n, digits){
+    if (n === null || n === undefined || isNaN(n)) return "—";
+    return (n * 100).toFixed(digits === undefined ? 1 : digits) + "%";
+  }
+  function fmtX(n){
+    if (n === null || n === undefined || isNaN(n)) return "—";
+    return n.toFixed(2) + "x";
+  }
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, ch => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[ch]));
+  }
+
+  // ---------- Financial engine (mirrors the Deal Analyzer tab formula-for-formula) ----------
+  function monthlyPI(annualRate, years, loanAmount){
+    const r = annualRate / 12;
+    const n = years * 12;
+    if (loanAmount <= 0) return 0;
+    if (r === 0) return loanAmount / n;
+    return loanAmount * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+  }
+  function year1PrincipalPaydown(annualRate, years, loanAmount){
+    const r = annualRate / 12;
+    if (loanAmount <= 0) return 0;
+    const payment = monthlyPI(annualRate, years, loanAmount);
+    let balance = loanAmount, paid = 0;
+    for (let i = 0; i < 12 && i < years * 12; i++){
+      const interest = balance * r;
+      const principal = payment - interest;
+      balance -= principal;
+      paid += principal;
+    }
+    return paid;
+  }
+
+  function computeDeal(p, a){
+    const purchasePrice = Number(p.purchasePrice) || 0;
+    const rehab = Number(p.rehabBudget) || 0;
+    const allInCost = purchasePrice + rehab;
+
+    const downPayment = purchasePrice * a.downPaymentPct;
+    const loanAmount = purchasePrice - downPayment;
+    const closingCosts = purchasePrice * a.closingCostsPct;
+    const pi = monthlyPI(a.interestRate, a.loanTermYears, loanAmount);
+    const totalCashInvested = downPayment + closingCosts + rehab + a.reservesAtClose;
+
+    const rent = Number(p.monthlyRent) || 0;
+    const otherIncome = Number(p.otherIncome) || 0;
+    const grossScheduledIncome = rent + otherIncome;
+    const vacancyLoss = -grossScheduledIncome * a.vacancyPct;
+    const effectiveGrossIncome = grossScheduledIncome + vacancyLoss;
+
+    const monthlyTaxes = (Number(p.annualTaxes) || 0) / 12;
+    const monthlyInsurance = (Number(p.annualInsurance) || 0) / 12;
+    const pm = effectiveGrossIncome * a.pmPct;
+    const maintenance = grossScheduledIncome * a.maintenancePct;
+    const capex = grossScheduledIncome * a.capexPct;
+    const leasing = grossScheduledIncome * a.leasingPct;
+    const hoa = Number(p.hoaMonthly) || 0;
+    const lawn = Number(p.lawnSnowTrash) || 0;
+    const ownerUtil = Number(p.ownerUtilities) || 0;
+    const misc = Number(p.otherMisc) || 0;
+
+    const totalOpEx = monthlyTaxes + monthlyInsurance + pm + maintenance + capex + leasing + hoa + lawn + ownerUtil + misc;
+    const noi = effectiveGrossIncome - totalOpEx;
+
+    const monthlyCashFlow = noi - pi;
+    const annualCashFlow = monthlyCashFlow * 12;
+    const annualDebtService = pi * 12;
+
+    const cashOnCash = totalCashInvested > 0 ? annualCashFlow / totalCashInvested : 0;
+    const capRate = allInCost > 0 ? (noi * 12) / allInCost : 0;
+    const dscr = annualDebtService > 0 ? (noi * 12) / annualDebtService : 0;
+    const onePctRule = allInCost > 0 ? rent / allInCost : 0;
+    const expenseRatio = effectiveGrossIncome !== 0 ? totalOpEx / effectiveGrossIncome : 0;
+    const sqft = Number(p.sqft) || 0;
+    const pricePerSqft = sqft > 0 ? purchasePrice / sqft : null;
+    const rentPerSqft = sqft > 0 ? rent / sqft : null;
+    const listPrice = Number(p.listPrice) || 0;
+    const discountToList = listPrice > 0 ? purchasePrice / listPrice - 1 : null;
+    const grm = rent > 0 ? allInCost / (rent * 12) : 0;
+
+    const beDenominator = (1 - a.vacancyPct) * (1 - a.pmPct) - a.maintenancePct - a.capexPct - a.leasingPct;
+    const beNumerator = monthlyTaxes + monthlyInsurance + hoa + lawn + ownerUtil + misc + pi;
+    const breakEvenRent = beDenominator > 0 ? beNumerator / beDenominator : null;
+    const rentCushion = (breakEvenRent && breakEvenRent > 0) ? (rent / breakEvenRent - 1) : null;
+
+    const year1Paydown = year1PrincipalPaydown(a.interestRate, a.loanTermYears, loanAmount);
+    const year1Appreciation = allInCost * a.appreciationPct;
+    const totalYear1ReturnDollar = annualCashFlow + year1Paydown + year1Appreciation;
+    const totalYear1ReturnPct = totalCashInvested > 0 ? totalYear1ReturnDollar / totalCashInvested : 0;
+
+    const tests = [
+      { label: "Monthly cash flow", actual: monthlyCashFlow, actualFmt: fmtMoney(monthlyCashFlow), target: a.minMonthlyCashFlow, targetFmt: fmtMoney(a.minMonthlyCashFlow), pass: monthlyCashFlow >= a.minMonthlyCashFlow },
+      { label: "Cash-on-cash return", actual: cashOnCash, actualFmt: fmtPct(cashOnCash), target: a.minCoCReturn, targetFmt: fmtPct(a.minCoCReturn), pass: cashOnCash >= a.minCoCReturn },
+      { label: "Cap rate", actual: capRate, actualFmt: fmtPct(capRate), target: a.minCapRate, targetFmt: fmtPct(a.minCapRate), pass: capRate >= a.minCapRate },
+      { label: "DSCR", actual: dscr, actualFmt: fmtX(dscr), target: a.minDSCR, targetFmt: fmtX(a.minDSCR), pass: dscr >= a.minDSCR },
+      { label: "1% rule", actual: onePctRule, actualFmt: fmtPct(onePctRule, 2), target: a.min1PctRule, targetFmt: fmtPct(a.min1PctRule, 2), pass: onePctRule >= a.min1PctRule },
+      { label: "All-in cost within budget", actual: allInCost, actualFmt: fmtMoney(allInCost), target: a.maxAllInCost, targetFmt: fmtMoney(a.maxAllInCost), pass: allInCost <= a.maxAllInCost },
+    ];
+    const testsPassed = tests.filter(t => t.pass).length;
+    let verdict, verdictKey;
+    if (testsPassed === 6) { verdict = "Strong Buy"; verdictKey = "strong"; }
+    else if (testsPassed === 5) { verdict = "Worth a Look"; verdictKey = "worth"; }
+    else { verdict = "Pass on It"; verdictKey = "pass"; }
+
+    return {
+      allInCost, downPayment, loanAmount, closingCosts, pi, totalCashInvested,
+      grossScheduledIncome, vacancyLoss, effectiveGrossIncome,
+      monthlyTaxes, monthlyInsurance, pm, maintenance, capex, leasing, hoa, lawn, ownerUtil, misc,
+      totalOpEx, noi, monthlyCashFlow, annualCashFlow, annualDebtService,
+      cashOnCash, capRate, dscr, onePctRule, expenseRatio, pricePerSqft, rentPerSqft, discountToList, grm,
+      breakEvenRent, rentCushion,
+      year1Paydown, year1Appreciation, totalYear1ReturnDollar, totalYear1ReturnPct,
+      tests, testsPassed, verdict, verdictKey,
+    };
   }
 
   // ---------- DOM refs ----------
-  const apiKeyInput = document.getElementById("apiKeyInput");
-  const apiKeyBar = document.getElementById("apiKeyBar");
-  const keySavedRow = document.getElementById("keySavedRow");
-  const changeKeyBtn = document.getElementById("changeKeyBtn");
-  const saveKeyBtn = document.getElementById("saveKeyBtn");
-  const refreshBtn = document.getElementById("refreshBtn");
-  const toggleDebugBtn = document.getElementById("toggleDebugBtn");
-  const debugPanel = document.getElementById("debugPanel");
   const banner = document.getElementById("banner");
   const content = document.getElementById("content");
   const zipTogglesEl = document.getElementById("zipToggles");
+  const zipSection = document.getElementById("zipSection");
   const sortSelect = document.getElementById("sortSelect");
-  const addManualBtn = document.getElementById("addManualBtn");
-  const manualModalOverlay = document.getElementById("manualModalOverlay");
-  const manualModalCloseBtn = document.getElementById("manualModalCloseBtn");
-  const manualCancelBtn = document.getElementById("manualCancelBtn");
-  const manualForm = document.getElementById("manualForm");
-  const manualFormError = document.getElementById("manualFormError");
+  const addPropertyBtn = document.getElementById("addPropertyBtn");
+  const emptyAddBtn = document.getElementById("emptyAddBtn");
+  const assumptionsBtn = document.getElementById("assumptionsBtn");
+
+  const propModalOverlay = document.getElementById("propModalOverlay");
+  const propModalTitle = document.getElementById("propModalTitle");
+  const propModalCloseBtn = document.getElementById("propModalCloseBtn");
+  const propCancelBtn = document.getElementById("propCancelBtn");
+  const propForm = document.getElementById("propForm");
+  const propFormError = document.getElementById("propFormError");
+  const propSaveBtn = document.getElementById("propSaveBtn");
+  const advancedToggleBtn = document.getElementById("advancedToggleBtn");
+  const advancedFields = document.getElementById("advancedFields");
+
   const smartPasteInput = document.getElementById("smartPasteInput");
   const smartParseBtn = document.getElementById("smartParseBtn");
   const shotFileInput = document.getElementById("shotFileInput");
@@ -499,53 +772,62 @@
   const shotExtractBtn = document.getElementById("shotExtractBtn");
   const shotOcrStatus = document.getElementById("shotOcrStatus");
 
+  const assumptionsModalOverlay = document.getElementById("assumptionsModalOverlay");
+  const assumptionsCloseBtn = document.getElementById("assumptionsCloseBtn");
+  const assumptionsForm = document.getElementById("assumptionsForm");
+  const assumptionsResetBtn = document.getElementById("assumptionsResetBtn");
+
+  const detailsModalOverlay = document.getElementById("detailsModalOverlay");
+  const detailsCloseBtn = document.getElementById("detailsCloseBtn");
+  const detailsTitle = document.getElementById("detailsTitle");
+  const detailsSub = document.getElementById("detailsSub");
+  const detailsBody = document.getElementById("detailsBody");
+
   // ---------- Init ----------
-  const savedKey = localStorage.getItem(LS.apiKey);
-  if (savedKey) {
-    apiKeyInput.value = savedKey;
-    setKeyBarCollapsed(true);
-  }
-
   buildZipToggles();
+  render();
 
-  // Collapse the key input once a key is stored — reclaims a big chunk of
-  // vertical space on a phone screen.
-  function setKeyBarCollapsed(collapsed){
-    apiKeyBar.style.display = collapsed ? "none" : "flex";
-    keySavedRow.classList.toggle("show", collapsed);
+  // ---------- Zip toggles (only zips actually in use, so this stays out of the way when empty) ----------
+  function zipsInUse(){
+    const set = new Set(properties.map(p => p.zip).filter(Boolean));
+    ZIPS.forEach(z => set.add(z.zip)); // always show the 8 target zips as quick filters
+    return Array.from(set);
   }
-
-  changeKeyBtn.addEventListener("click", () => {
-    setKeyBarCollapsed(false);
-    apiKeyInput.focus();
-    apiKeyInput.select();
+  function buildZipToggles(){
+    zipTogglesEl.innerHTML = "";
+    const zips = zipsInUse();
+    zipSection.style.display = zips.length ? "flex" : "none";
+    zips.forEach(zip => {
+      const meta = ZIP_MAP[zip];
+      const btn = document.createElement("button");
+      btn.className = "zip-toggle" + (hiddenZips.has(zip) ? "" : " active");
+      btn.innerHTML = `${zip}<span class="zip-name"> &middot; ${meta ? meta.name : "Other"}</span>${meta ? ` <span class="grade">(${meta.grade})</span>` : ""}`;
+      btn.title = meta ? `${zip} — ${meta.name} (Grade ${meta.grade})` : zip;
+      btn.addEventListener("click", () => {
+        if (hiddenZips.has(zip)) hiddenZips.delete(zip);
+        else hiddenZips.add(zip);
+        saveSet(LS.hiddenZips, hiddenZips);
+        btn.classList.toggle("active");
+        render();
+      });
+      zipTogglesEl.appendChild(btn);
+    });
+  }
+  document.getElementById("zipAllBtn").addEventListener("click", () => {
+    hiddenZips = new Set();
+    saveSet(LS.hiddenZips, hiddenZips);
+    buildZipToggles();
+    render();
   });
-
-  saveKeyBtn.addEventListener("click", () => {
-    const key = apiKeyInput.value.trim();
-    if (!key) { showBanner("warn", "Enter a key before saving."); return; }
-    localStorage.setItem(LS.apiKey, key);
-    setKeyBarCollapsed(true);
-    apiKeyInput.blur(); // dismiss the iOS keyboard
-    showBanner("info", "API key saved. Loading listings...");
-    fetchAll();
-  });
-
-  apiKeyInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") saveKeyBtn.click();
-  });
-
-  refreshBtn.addEventListener("click", fetchAll);
-
-  toggleDebugBtn.addEventListener("click", () => {
-    debugPanel.style.display = debugPanel.style.display === "none" ? "block" : "none";
-  });
-
-  sortSelect.addEventListener("change", () => {
-    currentSort = sortSelect.value;
+  document.getElementById("zipNoneBtn").addEventListener("click", () => {
+    hiddenZips = new Set(zipsInUse());
+    saveSet(LS.hiddenZips, hiddenZips);
+    buildZipToggles();
     render();
   });
 
+  // ---------- Filters / sort ----------
+  sortSelect.addEventListener("change", () => { currentSort = sortSelect.value; render(); });
   document.getElementById("filterRow").addEventListener("click", (e) => {
     const btn = e.target.closest(".filter-btn");
     if (!btn) return;
@@ -555,116 +837,171 @@
     render();
   });
 
-  if (savedKey) {
-    fetchAll();
-  } else if (manualRawProperties.length > 0) {
-    // No API key yet, but the user has manually added properties — show those.
-    processProperties(manualRawProperties);
-    render();
-  }
-
-  // ---------- Zip toggles ----------
-  function buildZipToggles(){
-    zipTogglesEl.innerHTML = "";
-    ZIPS.forEach(z => {
-      const btn = document.createElement("button");
-      btn.className = "zip-toggle" + (hiddenZips.has(z.zip) ? "" : " active");
-      // .zip-name is hidden on phones so the chips stay compact
-      btn.innerHTML = `${z.zip}<span class="zip-name"> &middot; ${z.name}</span> <span class="grade">(${z.grade})</span>`;
-      btn.title = `${z.zip} — ${z.name} (Grade ${z.grade})`;
-      btn.addEventListener("click", () => {
-        if (hiddenZips.has(z.zip)) hiddenZips.delete(z.zip);
-        else hiddenZips.add(z.zip);
-        saveSet(LS.hiddenZips, hiddenZips);
-        btn.classList.toggle("active");
-        render();
-      });
-      zipTogglesEl.appendChild(btn);
-    });
-  }
-
-  document.getElementById("zipAllBtn").addEventListener("click", () => {
-    hiddenZips = new Set();
-    saveSet(LS.hiddenZips, hiddenZips);
-    buildZipToggles();
-    render();
-  });
-
-  document.getElementById("zipNoneBtn").addEventListener("click", () => {
-    hiddenZips = new Set(ZIPS.map(z => z.zip));
-    saveSet(LS.hiddenZips, hiddenZips);
-    buildZipToggles();
-    render();
-  });
-
-  // ---------- Manual property entry ----------
-  const mZipSelect = document.getElementById("mZip");
+  // ---------- Property ZIP select (shared by form) ----------
+  const pZipSelect = document.getElementById("pZip");
   ZIPS.forEach(z => {
     const opt = document.createElement("option");
     opt.value = z.zip;
     opt.textContent = `${z.zip} — ${z.name} (${z.grade})`;
-    mZipSelect.appendChild(opt);
+    pZipSelect.appendChild(opt);
   });
-  const otherOpt = document.createElement("option");
-  otherOpt.value = "";
-  otherOpt.textContent = "Other (type below)";
-  mZipSelect.appendChild(otherOpt);
+  const otherZipOpt = document.createElement("option");
+  otherZipOpt.value = "";
+  otherZipOpt.textContent = "Other (type below)";
+  pZipSelect.appendChild(otherZipOpt);
+  pZipSelect.addEventListener("change", () => {
+    const meta = ZIP_MAP[pZipSelect.value];
+    if (meta) document.getElementById("pNeighborhood").value = meta.name;
+  });
 
-  function openManualModal(){
-    manualModalOverlay.classList.add("show");
-    document.getElementById("mAddr").focus();
-  }
-  function closeManualModal(){
-    manualModalOverlay.classList.remove("show");
-    manualForm.reset();
+  // ---------- Add / Edit Property modal ----------
+  function openPropModal(property){
+    editingId = property ? property.id : null;
+    propModalTitle.textContent = property ? "Edit Property" : "Add Property";
+    propSaveBtn.textContent = property ? "Save Changes" : "Save Property";
+    propFormError.classList.remove("show");
     smartPasteInput.value = "";
-    manualFormError.classList.remove("show");
     clearAttachedShot();
-  }
 
-  addManualBtn.addEventListener("click", openManualModal);
-  manualModalCloseBtn.addEventListener("click", closeManualModal);
-  manualCancelBtn.addEventListener("click", closeManualModal);
-  manualModalOverlay.addEventListener("click", (e) => {
-    if (e.target === manualModalOverlay) closeManualModal();
+    const f = (id) => document.getElementById(id);
+    if (property) {
+      f("pAddr").value = property.address || "";
+      f("pCity").value = property.city || "Indianapolis";
+      pZipSelect.value = property.zip || "";
+      f("pNeighborhood").value = property.neighborhood || "";
+      f("pBeds").value = property.beds || "";
+      f("pBaths").value = property.baths || "";
+      f("pSqft").value = property.sqft || "";
+      f("pYear").value = property.yearBuilt || "";
+      f("pMlsLink").value = property.mlsLink || "";
+      f("pListPrice").value = property.listPrice || "";
+      f("pPurchasePrice").value = property.purchasePrice || "";
+      f("pRehab").value = property.rehabBudget || "";
+      f("pRent").value = property.monthlyRent || "";
+      f("pTaxes").value = property.annualTaxes || "";
+      f("pInsurance").value = property.annualInsurance || "";
+      f("pOtherIncome").value = property.otherIncome || "";
+      f("pHoa").value = property.hoaMonthly || "";
+      f("pLawn").value = property.lawnSnowTrash || "";
+      f("pOwnerUtil").value = property.ownerUtilities || "";
+      f("pMisc").value = property.otherMisc || "";
+      attachedShotPreviewDataUrl = property.photo || null;
+      if (property.photo) {
+        shotPreviewImg.src = property.photo;
+        shotFileName.textContent = "Existing photo";
+        shotPreviewWrap.style.display = "flex";
+        shotPlaceholder.style.display = "none";
+        shotExtractBtn.disabled = false;
+      }
+      const hasAdvanced = property.otherIncome || property.hoaMonthly || property.lawnSnowTrash || property.ownerUtilities || property.otherMisc;
+      if (hasAdvanced) { advancedFields.classList.add("show"); advancedToggleBtn.textContent = "- Hide other expenses"; }
+    } else {
+      propForm.reset();
+      f("pCity").value = "Indianapolis";
+      advancedFields.classList.remove("show");
+      advancedToggleBtn.textContent = "+ Show other expenses (HOA, other income, etc.)";
+    }
+
+    propModalOverlay.classList.add("show");
+    f("pAddr").focus();
+  }
+  function closePropModal(){
+    propModalOverlay.classList.remove("show");
+    editingId = null;
+  }
+  addPropertyBtn.addEventListener("click", () => openPropModal(null));
+  emptyAddBtn.addEventListener("click", () => openPropModal(null));
+  propModalCloseBtn.addEventListener("click", closePropModal);
+  propCancelBtn.addEventListener("click", closePropModal);
+  propModalOverlay.addEventListener("click", (e) => { if (e.target === propModalOverlay) closePropModal(); });
+
+  advancedToggleBtn.addEventListener("click", () => {
+    const show = !advancedFields.classList.contains("show");
+    advancedFields.classList.toggle("show", show);
+    advancedToggleBtn.textContent = show ? "- Hide other expenses" : "+ Show other expenses (HOA, other income, etc.)";
   });
 
-  // Best-effort regex extraction from freeform text — e.g. text copied off
-  // a listing page, or text typed out after reading a screenshot. Fields
-  // stay editable afterward since this is a rough parse, not a guarantee.
+  propForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    propFormError.classList.remove("show");
+    const f = (id) => document.getElementById(id).value;
+
+    const zipTyped = (pZipSelect.value || "").trim();
+    const addr = f("pAddr").trim();
+    const purchasePrice = Number(f("pPurchasePrice"));
+    const rent = Number(f("pRent"));
+
+    if (!addr || !zipTyped || !purchasePrice || !rent) {
+      propFormError.textContent = "Address, ZIP, purchase price, and monthly rent are required.";
+      propFormError.classList.add("show");
+      return;
+    }
+
+    const data = {
+      address: addr,
+      city: f("pCity").trim() || "Indianapolis",
+      zip: zipTyped,
+      neighborhood: f("pNeighborhood").trim() || (ZIP_MAP[zipTyped] ? ZIP_MAP[zipTyped].name : ""),
+      beds: Number(f("pBeds")) || 0,
+      baths: Number(f("pBaths")) || 0,
+      sqft: Number(f("pSqft")) || 0,
+      yearBuilt: Number(f("pYear")) || 0,
+      mlsLink: f("pMlsLink").trim() || null,
+      listPrice: Number(f("pListPrice")) || 0,
+      purchasePrice: purchasePrice,
+      rehabBudget: Number(f("pRehab")) || 0,
+      monthlyRent: rent,
+      otherIncome: Number(f("pOtherIncome")) || 0,
+      annualTaxes: Number(f("pTaxes")) || 0,
+      annualInsurance: Number(f("pInsurance")) || 0,
+      hoaMonthly: Number(f("pHoa")) || 0,
+      lawnSnowTrash: Number(f("pLawn")) || 0,
+      ownerUtilities: Number(f("pOwnerUtil")) || 0,
+      otherMisc: Number(f("pMisc")) || 0,
+      photo: attachedShotPreviewDataUrl || null,
+    };
+
+    if (editingId) {
+      const idx = properties.findIndex(p => p.id === editingId);
+      if (idx !== -1) properties[idx] = Object.assign({}, properties[idx], data);
+    } else {
+      properties.push(Object.assign({ id: "prop-" + Date.now() + "-" + Math.floor(Math.random() * 1e6), createdAt: Date.now(), saved: false }, data));
+    }
+    saveProperties();
+    buildZipToggles();
+    render();
+    closePropModal();
+  });
+
+  function deleteProperty(id){
+    properties = properties.filter(p => p.id !== id);
+    saveProperties();
+    buildZipToggles();
+    render();
+  }
+
+  // ---------- Smart Paste ----------
   function smartParse(text){
     const out = {};
-
     const priceMatch = text.match(/\$\s?([\d]{1,3}(?:,\d{3})+|\d{5,7})/);
     if (priceMatch) out.price = Number(priceMatch[1].replace(/,/g, ""));
-
     const bedsMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:bd|bed(?:room)?s?)\b/i);
     if (bedsMatch) out.beds = Number(bedsMatch[1]);
-
     const bathsMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:ba|bath(?:room)?s?)\b/i);
     if (bathsMatch) out.baths = Number(bathsMatch[1]);
-
     const sqftMatch = text.match(/([\d]{1,3}(?:,\d{3})+|\d{3,6})\s*(?:sq\s?\.?\s?ft|sqft|square\s?feet)/i);
     if (sqftMatch) out.sqft = Number(sqftMatch[1].replace(/,/g, ""));
-
     const yearMatch = text.match(/(?:built|year\s?built)\D{0,6}(\d{4})/i) || text.match(/\b(18|19|20)\d{2}\b(?=\D*built)/i);
     if (yearMatch) out.yearBuilt = Number(yearMatch[1].length === 4 ? yearMatch[1] : yearMatch[0]);
-
-    // Prefer one of our 8 target zips if present; else fall back to any 5-digit run.
     const knownZip = ZIPS.map(z => z.zip).find(z => text.includes(z));
     const anyZipMatch = text.match(/\b\d{5}\b/);
     out.postalCode = knownZip || (anyZipMatch ? anyZipMatch[0] : "");
-
-    // Address: first line that starts with a street number.
     const addrMatch = text.match(/^\s*(\d+\s+[A-Za-z0-9 .'-]+?)(?:,|\n|$)/m);
     if (addrMatch) out.addrLine = addrMatch[1].trim();
-
     const cityMatch = text.match(/,\s*([A-Za-z .'-]+?),\s*IN\b/);
     if (cityMatch) out.city = cityMatch[1].trim();
-
     const urlMatch = text.match(/https?:\/\/\S+/);
     if (urlMatch) out.sourceUrl = urlMatch[0];
-
     return out;
   }
 
@@ -672,31 +1009,34 @@
     const text = smartPasteInput.value.trim();
     if (!text) return;
     const parsed = smartParse(text);
+    const f = (id) => document.getElementById(id);
 
-    if (parsed.addrLine) document.getElementById("mAddr").value = parsed.addrLine;
-    if (parsed.city) document.getElementById("mCity").value = parsed.city;
-    if (parsed.postalCode) document.getElementById("mZip").value = parsed.postalCode;
-    if (parsed.price) document.getElementById("mPrice").value = parsed.price;
-    if (parsed.beds !== undefined) document.getElementById("mBeds").value = parsed.beds;
-    if (parsed.baths !== undefined) document.getElementById("mBaths").value = parsed.baths;
-    if (parsed.sqft) document.getElementById("mSqft").value = parsed.sqft;
-    if (parsed.yearBuilt) document.getElementById("mYear").value = parsed.yearBuilt;
-    if (parsed.sourceUrl) document.getElementById("mSourceUrl").value = parsed.sourceUrl;
+    if (parsed.addrLine) f("pAddr").value = parsed.addrLine;
+    if (parsed.city) f("pCity").value = parsed.city;
+    if (parsed.postalCode) { pZipSelect.value = parsed.postalCode; const meta = ZIP_MAP[parsed.postalCode]; if (meta) f("pNeighborhood").value = meta.name; }
+    if (parsed.price) {
+      f("pListPrice").value = parsed.price;
+      if (!f("pPurchasePrice").value) f("pPurchasePrice").value = parsed.price;
+    }
+    if (parsed.beds !== undefined) f("pBeds").value = parsed.beds;
+    if (parsed.baths !== undefined) f("pBaths").value = parsed.baths;
+    if (parsed.sqft) f("pSqft").value = parsed.sqft;
+    if (parsed.yearBuilt) f("pYear").value = parsed.yearBuilt;
+    if (parsed.sourceUrl) f("pMlsLink").value = parsed.sourceUrl;
 
-    const missing = ["addrLine","price","beds"].filter(k => !parsed[k]);
+    const missing = ["addrLine","price"].filter(k => !parsed[k]);
     if (missing.length) {
-      manualFormError.textContent = "Auto-fill couldn't find: " + missing.join(", ") + ". Please fill those in manually and double check the rest.";
-      manualFormError.classList.add("show");
+      propFormError.textContent = "Auto-fill couldn't find everything (e.g. address or price). Fill in the rest manually, and double-check what was found.";
+      propFormError.classList.add("show");
     } else {
-      manualFormError.classList.remove("show");
+      propFormError.classList.remove("show");
     }
   }
-
   smartParseBtn.addEventListener("click", applySmartParse);
 
   // ---------- Screenshot attach + client-side OCR ----------
-  let attachedShotFile = null;        // original File, used for OCR (full resolution)
-  let attachedShotPreviewDataUrl = null; // downscaled copy, used for the on-card thumbnail + storage
+  let attachedShotFile = null;
+  let attachedShotPreviewDataUrl = null;
   let tesseractLoadPromise = null;
 
   function resizeImageToDataUrl(file, maxDim, quality){
@@ -719,7 +1059,6 @@
       img.src = objectUrl;
     });
   }
-
   async function handleShotFile(file){
     if (!file || !file.type.startsWith("image/")) {
       shotOcrStatus.textContent = "That doesn't look like an image file.";
@@ -735,14 +1074,13 @@
       shotOcrStatus.classList.add("error");
       return;
     }
-    attachedShotFile = file; // keep full-res original for OCR accuracy
+    attachedShotFile = file;
     shotPreviewImg.src = attachedShotPreviewDataUrl;
     shotFileName.textContent = file.name || "Screenshot attached";
     shotPreviewWrap.style.display = "flex";
     shotPlaceholder.style.display = "none";
     shotExtractBtn.disabled = false;
   }
-
   function clearAttachedShot(){
     attachedShotFile = null;
     attachedShotPreviewDataUrl = null;
@@ -753,38 +1091,20 @@
     shotOcrStatus.textContent = "";
     shotOcrStatus.classList.remove("error");
   }
-
   shotDropzone.addEventListener("click", () => shotFileInput.click());
-  shotDropzone.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); shotFileInput.click(); }
-  });
-  shotFileInput.addEventListener("change", () => {
-    if (shotFileInput.files[0]) handleShotFile(shotFileInput.files[0]);
-  });
-  shotRemoveBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    clearAttachedShot();
-  });
-
-  ["dragover","dragenter"].forEach(evt => {
-    shotDropzone.addEventListener(evt, (e) => {
-      e.preventDefault();
-      shotDropzone.classList.add("dragover");
-    });
-  });
-  ["dragleave","dragend"].forEach(evt => {
-    shotDropzone.addEventListener(evt, () => shotDropzone.classList.remove("dragover"));
-  });
+  shotDropzone.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); shotFileInput.click(); } });
+  shotFileInput.addEventListener("change", () => { if (shotFileInput.files[0]) handleShotFile(shotFileInput.files[0]); });
+  shotRemoveBtn.addEventListener("click", (e) => { e.stopPropagation(); clearAttachedShot(); });
+  ["dragover","dragenter"].forEach(evt => shotDropzone.addEventListener(evt, (e) => { e.preventDefault(); shotDropzone.classList.add("dragover"); }));
+  ["dragleave","dragend"].forEach(evt => shotDropzone.addEventListener(evt, () => shotDropzone.classList.remove("dragover")));
   shotDropzone.addEventListener("drop", (e) => {
     e.preventDefault();
     shotDropzone.classList.remove("dragover");
     const file = e.dataTransfer.files && e.dataTransfer.files[0];
     if (file) handleShotFile(file);
   });
-
-  // Paste a screenshot straight from the clipboard while the modal is open.
   document.addEventListener("paste", (e) => {
-    if (!manualModalOverlay.classList.contains("show")) return;
+    if (!propModalOverlay.classList.contains("show")) return;
     const items = e.clipboardData && e.clipboardData.items;
     if (!items) return;
     for (const item of items) {
@@ -795,7 +1115,6 @@
       }
     }
   });
-
   function loadTesseract(){
     if (window.Tesseract) return Promise.resolve();
     if (tesseractLoadPromise) return tesseractLoadPromise;
@@ -808,7 +1127,6 @@
     });
     return tesseractLoadPromise;
   }
-
   shotExtractBtn.addEventListener("click", async () => {
     if (!attachedShotFile) return;
     shotExtractBtn.disabled = true;
@@ -842,346 +1160,185 @@
     }
   });
 
-  manualForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    manualFormError.classList.remove("show");
-
-    const zipTyped = mZipSelect.value || (smartParse(smartPasteInput.value.trim()).postalCode) || "";
-    const form = {
-      addrLine: document.getElementById("mAddr").value.trim(),
-      city: document.getElementById("mCity").value.trim() || "Indianapolis",
-      stateCode: (document.getElementById("mState").value.trim() || "IN").toUpperCase(),
-      postalCode: zipTyped.trim(),
-      price: Number(document.getElementById("mPrice").value),
-      beds: Number(document.getElementById("mBeds").value),
-      baths: Number(document.getElementById("mBaths").value) || 0,
-      sqft: Number(document.getElementById("mSqft").value) || 0,
-      yearBuilt: Number(document.getElementById("mYear").value) || 0,
-      listDateRaw: document.getElementById("mListDate").value || null,
-      sourceUrl: document.getElementById("mSourceUrl").value.trim() || null,
-      photo: attachedShotPreviewDataUrl || null,
-    };
-
-    if (!form.addrLine || !form.postalCode || !form.price || !form.beds) {
-      manualFormError.textContent = "Address, ZIP, price, and bedrooms are required.";
-      manualFormError.classList.add("show");
-      return;
-    }
-
-    const listing = normalizeManualEntry(form);
-    manualRawProperties.push(listing);
-    saveManualList();
-
-    processProperties(apiRawProperties.concat(manualRawProperties));
+  // ---------- Assumptions modal ----------
+  function openAssumptionsModal(){
+    const f = (id) => document.getElementById(id);
+    f("aDownPct").value = assumptions.downPaymentPct;
+    f("aRate").value = assumptions.interestRate;
+    f("aTerm").value = assumptions.loanTermYears;
+    f("aClosingPct").value = assumptions.closingCostsPct;
+    f("aReserves").value = assumptions.reservesAtClose;
+    f("aVacancy").value = assumptions.vacancyPct;
+    f("aPm").value = assumptions.pmPct;
+    f("aMaint").value = assumptions.maintenancePct;
+    f("aCapex").value = assumptions.capexPct;
+    f("aLeasing").value = assumptions.leasingPct;
+    f("aAppreciation").value = assumptions.appreciationPct;
+    f("aMinCF").value = assumptions.minMonthlyCashFlow;
+    f("aMinCoC").value = assumptions.minCoCReturn;
+    f("aMinCap").value = assumptions.minCapRate;
+    f("aMinDscr").value = assumptions.minDSCR;
+    f("aMin1pct").value = assumptions.min1PctRule;
+    f("aMaxAllIn").value = assumptions.maxAllInCost;
+    assumptionsModalOverlay.classList.add("show");
+  }
+  function closeAssumptionsModal(){ assumptionsModalOverlay.classList.remove("show"); }
+  assumptionsBtn.addEventListener("click", openAssumptionsModal);
+  assumptionsCloseBtn.addEventListener("click", closeAssumptionsModal);
+  assumptionsModalOverlay.addEventListener("click", (e) => { if (e.target === assumptionsModalOverlay) closeAssumptionsModal(); });
+  assumptionsResetBtn.addEventListener("click", () => {
+    assumptions = Object.assign({}, DEFAULT_ASSUMPTIONS);
+    saveAssumptions();
+    openAssumptionsModal();
     render();
-    closeManualModal();
+    showBanner("info", "Assumptions reset to defaults.");
+  });
+  assumptionsForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const f = (id) => Number(document.getElementById(id).value);
+    assumptions = {
+      downPaymentPct: f("aDownPct"), interestRate: f("aRate"), loanTermYears: f("aTerm"),
+      closingCostsPct: f("aClosingPct"), reservesAtClose: f("aReserves"),
+      vacancyPct: f("aVacancy"), pmPct: f("aPm"), maintenancePct: f("aMaint"),
+      capexPct: f("aCapex"), leasingPct: f("aLeasing"), appreciationPct: f("aAppreciation"),
+      minMonthlyCashFlow: f("aMinCF"), minCoCReturn: f("aMinCoC"), minCapRate: f("aMinCap"),
+      minDSCR: f("aMinDscr"), min1PctRule: f("aMin1pct"), maxAllInCost: f("aMaxAllIn"),
+    };
+    saveAssumptions();
+    render();
+    closeAssumptionsModal();
+    showBanner("info", "Assumptions saved — every property recalculated.");
   });
 
-  function removeManualProperty(id){
-    manualRawProperties = manualRawProperties.filter(p => p.id !== id);
-    saveManualList();
-    processProperties(apiRawProperties.concat(manualRawProperties));
-    render();
-  }
+  // ---------- Details modal ----------
+  function openDetailsModal(property){
+    const d = computeDeal(property, assumptions);
+    detailsTitle.textContent = property.address;
+    detailsSub.textContent = `${property.city}, IN ${property.zip}${property.neighborhood ? " — " + property.neighborhood : ""}`;
 
-  // ---------- Fetching ----------
-  async function fetchAll(){
-    const key = localStorage.getItem(LS.apiKey);
-    if (!key) { showBanner("warn", "Paste and save your API key first."); return; }
+    function row(label, value, cls){ return `<div class="detail-row"><span class="lbl">${label}</span><span class="val ${cls||''}">${value}</span></div>`; }
+    function section(title){ return `<div class="form-section"><div class="sec-title">${title}</div>`; }
 
-    refreshBtn.disabled = true;
-    refreshBtn.textContent = "Loading...";
-    content.innerHTML = '<div class="loading">Pulling listings from 8 ZIP codes...</div>';
-    hideBanner();
-    usingSampleData = false;
-    lastRawResponses = {};
+    let html = "";
+    html += section("1. Property");
+    html += row("Beds / Baths", `${property.beds || "—"} / ${property.baths || "—"}`);
+    html += row("Square Feet", property.sqft ? property.sqft.toLocaleString() : "—");
+    html += row("Year Built", property.yearBuilt || "—");
+    html += row("Price / Sqft", d.pricePerSqft !== null ? fmtMoney(d.pricePerSqft) : "—");
+    html += row("Rent / Sqft", d.rentPerSqft !== null ? "$" + d.rentPerSqft.toFixed(2) : "—");
+    html += "</div>";
 
-    const results = await Promise.allSettled(ZIPS.map(z => fetchZip(z.zip, key)));
+    html += section("2. Purchase & Financing");
+    html += row("List Price", property.listPrice ? fmtMoney(property.listPrice) : "—");
+    html += row("Purchase Price", fmtMoney(property.purchasePrice));
+    html += row("Discount to List", d.discountToList !== null ? fmtPct(d.discountToList) : "—");
+    html += row("Rehab Budget", fmtMoney(property.rehabBudget));
+    html += row("All-In Cost", fmtMoney(d.allInCost), "total");
+    html += row("Down Payment", fmtMoney(d.downPayment));
+    html += row("Loan Amount", fmtMoney(d.loanAmount));
+    html += row("Closing Costs", fmtMoney(d.closingCosts));
+    html += row("Monthly Principal & Interest", fmtMoney(d.pi));
+    html += row("Total Cash Invested", fmtMoney(d.totalCashInvested), "total");
+    html += "</div>";
 
-    let combined = [];
-    let anySuccess = false;
-    let errors = [];
+    html += section("3. Income (Monthly)");
+    html += row("Gross Scheduled Income", fmtMoney(d.grossScheduledIncome));
+    html += row("Vacancy Loss", fmtMoney(d.vacancyLoss), "neg");
+    html += row("Effective Gross Income", fmtMoney(d.effectiveGrossIncome), "total");
+    html += "</div>";
 
-    results.forEach((r, i) => {
-      const zip = ZIPS[i].zip;
-      if (r.status === "fulfilled") {
-        anySuccess = true;
-        combined = combined.concat(r.value);
-      } else {
-        errors.push(`${zip}: ${r.reason && r.reason.message ? r.reason.message : r.reason}`);
-      }
+    html += section("4. Operating Expenses (Monthly)");
+    html += row("Property Taxes", fmtMoney(d.monthlyTaxes));
+    html += row("Insurance", fmtMoney(d.monthlyInsurance));
+    html += row("Property Management", fmtMoney(d.pm));
+    html += row("Maintenance", fmtMoney(d.maintenance));
+    html += row("CapEx Reserve", fmtMoney(d.capex));
+    html += row("Leasing / Turnover", fmtMoney(d.leasing));
+    if (d.hoa) html += row("HOA", fmtMoney(d.hoa));
+    if (d.lawn) html += row("Lawn / Snow / Trash", fmtMoney(d.lawn));
+    if (d.ownerUtil) html += row("Owner-Paid Utilities", fmtMoney(d.ownerUtil));
+    if (d.misc) html += row("Other / Misc", fmtMoney(d.misc));
+    html += row("TOTAL OPERATING EXPENSES", fmtMoney(d.totalOpEx), "total");
+    html += row("NET OPERATING INCOME", fmtMoney(d.noi), "total " + (d.noi >= 0 ? "pos" : "neg"));
+    html += "</div>";
+
+    html += section("5. Returns");
+    html += row("Monthly Cash Flow", fmtMoney(d.monthlyCashFlow), d.monthlyCashFlow >= 0 ? "pos" : "neg");
+    html += row("Annual Cash Flow", fmtMoney(d.annualCashFlow), d.annualCashFlow >= 0 ? "pos" : "neg");
+    html += row("Cash-on-Cash Return", fmtPct(d.cashOnCash));
+    html += row("Cap Rate (all-in basis)", fmtPct(d.capRate));
+    html += row("DSCR", fmtX(d.dscr));
+    html += row("1% Rule", fmtPct(d.onePctRule, 2));
+    html += row("Gross Rent Multiplier", d.grm ? d.grm.toFixed(2) : "—");
+    html += row("Operating Expense Ratio", fmtPct(d.expenseRatio));
+    html += row("Break-Even Monthly Rent", d.breakEvenRent !== null ? fmtMoney(d.breakEvenRent) : "—");
+    html += row("Rent Cushion vs. Break-Even", d.rentCushion !== null ? fmtPct(d.rentCushion) : "—");
+    html += "</div>";
+
+    html += section("6. Year-1 Total Return");
+    html += row("Year-1 Principal Paydown", fmtMoney(d.year1Paydown));
+    html += row("Year-1 Appreciation", fmtMoney(d.year1Appreciation));
+    html += row("Total Year-1 Return ($)", fmtMoney(d.totalYear1ReturnDollar), "total");
+    html += row("Total Year-1 Return (%)", fmtPct(d.totalYear1ReturnPct), "total");
+    html += "</div>";
+
+    html += section("7. Scorecard vs. Buy Criteria");
+    d.tests.forEach(t => {
+      html += `<div class="test-row"><span class="t-label">${t.label} <span class="t-actual">(${t.actualFmt} vs target ${t.targetFmt})</span></span><span class="${t.pass ? 'test-pass' : 'test-fail'}">${t.pass ? 'PASS' : 'FAIL'}</span></div>`;
     });
+    html += row("TESTS PASSED", `${d.testsPassed} of 6`, "total");
+    html += row("VERDICT", d.verdict, "total " + (d.verdictKey === "strong" ? "pos" : (d.verdictKey === "pass" ? "neg" : "")));
+    html += "</div>";
 
-    if (!anySuccess) {
-      usingSampleData = true;
-      combined = generateSampleData();
-      showBanner("error", "API unavailable — showing sample data.",
-        "First error: " + (errors[0] || "unknown") + "\n\n" +
-        "Common causes: invalid key, key not subscribed to this API on RapidAPI, " +
-        "or the API blocking direct browser (CORS) requests. Tap \"Debug\" for the raw response."
-      );
-    } else if (errors.length > 0) {
-      showBanner("warn", `Loaded listings, but ${errors.length} of 8 ZIP codes failed: ${errors.join(" | ")}`);
-    } else {
-      hideBanner();
-    }
-
-    apiRawProperties = combined;
-    processProperties(apiRawProperties.concat(manualRawProperties));
-    render();
-
-    refreshBtn.disabled = false;
-    refreshBtn.textContent = "Refresh Listings";
-    updateDebugPanel();
+    detailsBody.innerHTML = html;
+    detailsModalOverlay.classList.add("show");
   }
-
-  async function fetchZip(zip, key){
-    const body = {
-      query: { status: ["for_sale"], postal_code: zip },
-      limit: 50,
-      offset: 0,
-      sort: { direction: "desc", field: "list_date" }
-    };
-
-    let resp;
-    try {
-      resp = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "x-rapidapi-key": key,
-          "x-rapidapi-host": API_HOST,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(body)
-      });
-    } catch (networkErr) {
-      throw new Error("network/CORS error (" + networkErr.message + ")");
-    }
-
-    const text = await resp.text();
-    let json;
-    try { json = JSON.parse(text); } catch(e) { json = { raw: text }; }
-
-    lastRawResponses[zip] = { status: resp.status, body: json };
-
-    if (!resp.ok) {
-      throw new Error(`HTTP ${resp.status} — ${JSON.stringify(json).slice(0,200)}`);
-    }
-
-    const list = extractListingsArray(json);
-    return list.map(item => normalizeListing(item, zip));
-  }
-
-  // Try several common shapes used by realtor.com-schema clone APIs on RapidAPI.
-  function extractListingsArray(json){
-    const candidates = [
-      json,
-      json && json.data,
-      json && json.data && json.data.results,
-      json && json.data && json.data.home_search && json.data.home_search.results,
-      json && json.results,
-      json && json.properties,
-      json && json.listings,
-      json && json.homes,
-    ];
-    for (const c of candidates) {
-      if (Array.isArray(c)) return c;
-    }
-    return [];
-  }
-
-  function get(obj, paths, fallback){
-    for (const path of paths) {
-      const val = path.split(".").reduce((o,k) => (o && o[k] !== undefined ? o[k] : undefined), obj);
-      if (val !== undefined && val !== null && val !== "") return val;
-    }
-    return fallback;
-  }
-
-  function normalizeListing(item, queriedZip){
-    const id = get(item, ["property_id","listing_id","id","mls_id"], null) ||
-      (get(item, ["location.address.line"], "") + "-" + queriedZip);
-
-    const price = Number(get(item, ["list_price","price","description.list_price"], 0)) || 0;
-
-    const beds = Number(get(item, ["description.beds","beds","property.bedrooms"], 0)) || 0;
-    const baths = Number(get(item, ["description.baths","description.baths_consolidated","baths"], 0)) || 0;
-    const sqft = Number(get(item, ["description.sqft","building_size.size","sqft"], 0)) || 0;
-    const yearBuilt = Number(get(item, ["description.year_built","year_built"], 0)) || 0;
-    const propType = get(item, ["description.type","property_type"], "");
-
-    const addrLine = get(item, ["location.address.line","address.line","address_line","full_address"], "Address unavailable");
-    const city = get(item, ["location.address.city","address.city","city"], "Indianapolis");
-    const stateCode = get(item, ["location.address.state_code","address.state","state_code"], "IN");
-    const postalCode = get(item, ["location.address.postal_code","address.postal_code","postal_code"], queriedZip);
-
-    const listDateRaw = get(item, ["list_date","last_update_date","description.list_date"], null);
-
-    const photo = get(item, ["primary_photo.href","photos.0.href","thumbnail"], null);
-
-    const permalink = get(item, ["permalink","href","rdc_web_url"], null);
-    const realtorUrl = permalink
-      ? (permalink.startsWith("http") ? permalink : `https://www.realtor.com/realestateandhomes-detail/${permalink}`)
-      : `https://www.realtor.com/realestateandhomes-search/${encodeURIComponent(addrLine + " " + city + " " + stateCode + " " + postalCode)}`;
-
-    const zillowUrl = `https://www.zillow.com/homes/${encodeURIComponent(addrLine + " " + city + " " + stateCode + " " + postalCode)}_rb/`;
-
-    return {
-      id: String(id),
-      zip: queriedZip,
-      addrLine, city, stateCode, postalCode,
-      price, beds, baths, sqft, yearBuilt, propType,
-      listDateRaw,
-      photo, realtorUrl, zillowUrl,
-      _raw: item
-    };
-  }
-
-  // Builds the same normalized shape as normalizeListing(), but from a
-  // hand-entered form (see "Add Property Manually" modal) instead of an
-  // API item — used for listings the API can't pull (e.g. off-market
-  // finds, or properties pasted in from a link/screenshot).
-  function normalizeManualEntry(form){
-    const addrLine = form.addrLine || "Address unavailable";
-    const city = form.city || "Indianapolis";
-    const stateCode = form.stateCode || "IN";
-    const postalCode = form.postalCode;
-    const searchFallback = `https://www.zillow.com/homes/${encodeURIComponent(addrLine + " " + city + " " + stateCode + " " + postalCode)}_rb/`;
-    const realtorFallback = `https://www.realtor.com/realestateandhomes-search/${encodeURIComponent(addrLine + " " + city + " " + stateCode + " " + postalCode)}`;
-
-    let realtorUrl = realtorFallback;
-    let zillowUrl = searchFallback;
-    if (form.sourceUrl) {
-      if (/zillow\.com/i.test(form.sourceUrl)) zillowUrl = form.sourceUrl;
-      else if (/realtor\.com/i.test(form.sourceUrl)) realtorUrl = form.sourceUrl;
-      else realtorUrl = form.sourceUrl; // unknown source — surface it under the Realtor.com slot
-    }
-
-    return {
-      id: "manual-" + Date.now() + "-" + (manualIdCounter++),
-      zip: postalCode,
-      addrLine, city, stateCode, postalCode,
-      price: form.price, beds: form.beds, baths: form.baths || 0,
-      sqft: form.sqft || 0, yearBuilt: form.yearBuilt || 0, propType: "",
-      listDateRaw: form.listDateRaw || null,
-      photo: form.photo || null, realtorUrl, zillowUrl,
-      isManual: true,
-      _raw: form
-    };
-  }
-
-  // ---------- Scoring ----------
-  function scoreListing(p){
-    let score = 0;
-    const zipInfo = ZIP_MAP[p.zip] || { rentBase: 1300, topTier: false };
-
-    // Price 30 pts
-    if (p.price >= 130000 && p.price <= 175000) score += 30;
-
-    // Zip 25 / 15 / 0
-    if (zipInfo.topTier) score += 25;
-    else if (ZIP_MAP[p.zip]) score += 15;
-
-    // Bedrooms 15 / 5 / 0
-    if (p.beds >= 3) score += 15;
-    else if (p.beds === 2) score += 5;
-
-    // Estimated rent
-    let estRent = zipInfo.rentBase;
-    if (p.beds >= 4) estRent += 100;
-    if (p.sqft > 1400) estRent += 50;
-
-    const rentRatio = p.price > 0 ? (estRent / p.price) * 100 : 0;
-    if (rentRatio >= 0.85) score += 20;
-    else if (rentRatio >= 0.70) score += 12;
-    else score += 4;
-
-    // Days on market
-    let daysAgo = null;
-    if (p.listDateRaw) {
-      const d = new Date(p.listDateRaw);
-      if (!isNaN(d.getTime())) {
-        daysAgo = Math.floor((Date.now() - d.getTime()) / 86400000);
-      }
-    }
-    if (daysAgo !== null) {
-      if (daysAgo <= 3) score += 10;
-      else if (daysAgo <= 14) score += 5;
-    } else {
-      score += 5; // unknown list date — treat as mid-range, not penalized to zero
-    }
-
-    let verdict, verdictKey;
-    if (score >= 80) { verdict = "Strong Buy"; verdictKey = "strong"; }
-    else if (score >= 60) { verdict = "Worth Analyzing"; verdictKey = "worth"; }
-    else if (score >= 40) { verdict = "Proceed with Caution"; verdictKey = "caution"; }
-    else { verdict = "Pass"; verdictKey = "pass"; }
-
-    return { score, verdict, verdictKey, estRent, rentRatio, daysAgo };
-  }
-
-  function processProperties(list){
-    // de-dupe by id (in case a zip search returns overlapping results)
-    const byId = new Map();
-    list.forEach(p => { if (!byId.has(p.id)) byId.set(p.id, p); });
-    const deduped = Array.from(byId.values());
-
-    newIdsThisPull = new Set();
-    deduped.forEach(p => {
-      const s = scoreListing(p);
-      Object.assign(p, s);
-      p.isNew = !seenIds.has(p.id);
-      if (p.isNew) newIdsThisPull.add(p.id);
-      p.isSaved = savedIds.has(p.id);
-    });
-
-    allProperties = deduped;
-
-    // mark all as seen now (persist)
-    deduped.forEach(p => seenIds.add(p.id));
-    saveSet(LS.seenIds, seenIds);
-  }
+  detailsCloseBtn.addEventListener("click", () => detailsModalOverlay.classList.remove("show"));
+  detailsModalOverlay.addEventListener("click", (e) => { if (e.target === detailsModalOverlay) detailsModalOverlay.classList.remove("show"); });
 
   // ---------- Rendering ----------
-  function scoreClass(score){
-    if (score >= 80) return "score-80";
-    if (score >= 60) return "score-60";
-    if (score >= 40) return "score-40";
+  function scoreClass(testsPassed){
+    if (testsPassed === 6) return "score-80";
+    if (testsPassed === 5) return "score-60";
+    if (testsPassed >= 3) return "score-40";
     return "score-0";
   }
 
   function getFiltered(){
-    return allProperties.filter(p => {
+    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    return properties.filter(p => {
       if (hiddenZips.has(p.zip)) return false;
-      if (currentFilter === "strong" && p.verdictKey !== "strong") return false;
-      if (currentFilter === "worth" && p.verdictKey !== "worth") return false;
-      if (currentFilter === "new" && !p.isNew) return false;
-      if (currentFilter === "saved" && !savedIds.has(p.id)) return false;
+      const d = computeDeal(p, assumptions);
+      if (currentFilter === "strong" && d.verdictKey !== "strong") return false;
+      if (currentFilter === "worth" && d.verdictKey !== "worth") return false;
+      if (currentFilter === "saved" && !p.saved) return false;
+      if (currentFilter === "new" && p.createdAt < oneDayAgo) return false;
       return true;
     });
   }
-
   function getSorted(list){
-    const arr = list.slice();
-    switch(currentSort){
-      case "price_asc": arr.sort((a,b) => a.price - b.price); break;
-      case "price_desc": arr.sort((a,b) => b.price - a.price); break;
-      case "newest": arr.sort((a,b) => {
-        const da = a.listDateRaw ? new Date(a.listDateRaw).getTime() : 0;
-        const db = b.listDateRaw ? new Date(b.listDateRaw).getTime() : 0;
-        return db - da;
-      }); break;
-      case "rent_ratio": arr.sort((a,b) => b.rentRatio - a.rentRatio); break;
+    const withDeals = list.map(p => ({ p, d: computeDeal(p, assumptions) }));
+    switch (currentSort) {
+      case "cashflow": withDeals.sort((a,b) => b.d.monthlyCashFlow - a.d.monthlyCashFlow); break;
+      case "coc": withDeals.sort((a,b) => b.d.cashOnCash - a.d.cashOnCash); break;
+      case "price_asc": withDeals.sort((a,b) => a.p.purchasePrice - b.p.purchasePrice); break;
+      case "price_desc": withDeals.sort((a,b) => b.p.purchasePrice - a.p.purchasePrice); break;
+      case "newest": withDeals.sort((a,b) => b.p.createdAt - a.p.createdAt); break;
       case "score":
-      default: arr.sort((a,b) => b.score - a.score);
+      default: withDeals.sort((a,b) => b.d.testsPassed - a.d.testsPassed || b.d.monthlyCashFlow - a.d.monthlyCashFlow);
     }
-    return arr;
+    return withDeals;
   }
 
   function render(){
     updateStats();
     const list = getSorted(getFiltered());
 
+    if (properties.length === 0) {
+      content.innerHTML = `<div class="empty-state">No properties tracked yet.<br><button class="primary" id="emptyAddBtn2">+ Add your first property</button></div>`;
+      document.getElementById("emptyAddBtn2").addEventListener("click", () => openPropModal(null));
+      return;
+    }
     if (list.length === 0) {
       content.innerHTML = '<div class="empty-state">No properties match the current filters.</div>';
       return;
@@ -1189,48 +1346,52 @@
 
     content.innerHTML = '<div class="grid" id="grid"></div>';
     const grid = document.getElementById("grid");
+    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
 
-    list.forEach(p => {
+    list.forEach(({ p, d }) => {
       const card = document.createElement("div");
-      card.className = "card " + scoreClass(p.score);
-
-      const zipInfo = ZIP_MAP[p.zip];
-      const daysLabel = p.daysAgo === null ? "date unknown" : (p.daysAgo === 0 ? "listed today" : `${p.daysAgo}d ago`);
+      card.className = "card " + scoreClass(d.testsPassed);
+      const meta = ZIP_MAP[p.zip];
+      const isNew = p.createdAt >= oneDayAgo;
+      const q = encodeURIComponent(`${p.address} ${p.city} IN ${p.zip}`);
 
       card.innerHTML = `
         ${p.photo ? `<img class="card-photo" src="${p.photo}" alt="">` : ''}
         <div class="card-top">
-          <div class="address">${escapeHtml(p.addrLine)}
-            <span class="sub">${escapeHtml(p.city)}, ${escapeHtml(p.stateCode)} ${escapeHtml(p.postalCode)}</span>
+          <div class="address">${escapeHtml(p.address)}
+            <span class="sub">${escapeHtml(p.city)}, IN ${escapeHtml(p.zip)}${p.neighborhood ? " — " + escapeHtml(p.neighborhood) : ""}</span>
           </div>
           <div style="text-align:right;">
-            <div class="score-pill">${p.score}</div>
-            <div class="verdict">${p.verdict}</div>
+            <div class="score-pill">${d.testsPassed}/6</div>
+            <div class="verdict">${d.verdict}</div>
           </div>
         </div>
 
         <div class="badges">
-          ${p.isManual ? '<span class="badge manual">Manual</span>' : (p.isNew ? '<span class="badge new">New</span>' : '')}
-          <span class="badge zip">${p.zip} &middot; ${zipInfo ? zipInfo.grade : "outside targets"}</span>
-          <span class="badge zip">${daysLabel}</span>
+          ${isNew ? '<span class="badge new">New</span>' : ''}
+          <span class="badge zip">${p.zip}${meta ? " &middot; " + meta.grade : ""}</span>
+          ${p.beds ? `<span class="badge zip">${p.beds} bd</span>` : ''}
         </div>
 
-        <div class="price-row">$${p.price.toLocaleString()}
-          <span class="rentinfo">Est. rent $${p.estRent.toLocaleString()}/mo &middot; ${p.rentRatio.toFixed(2)}% ratio</span>
+        <div class="price-row">${fmtMoney(p.purchasePrice)}
+          <span class="rentinfo">All-in ${fmtMoney(d.allInCost)} &middot; Rent ${fmtMoney(p.monthlyRent)}/mo</span>
         </div>
 
-        <div class="facts">
-          <span><b>${p.beds || "?"}</b> bd</span>
-          <span><b>${p.baths || "?"}</b> ba</span>
-          <span><b>${p.sqft ? p.sqft.toLocaleString() : "?"}</b> sqft</span>
-          <span><b>${p.yearBuilt || "?"}</b> built</span>
+        <div class="metric-grid">
+          <div class="m"><span>Cash Flow</span><b class="${d.monthlyCashFlow >= 0 ? 'pos' : 'neg'}">${fmtMoney(d.monthlyCashFlow)}/mo</b></div>
+          <div class="m"><span>CoC Return</span><b>${fmtPct(d.cashOnCash)}</b></div>
+          <div class="m"><span>Cap Rate</span><b>${fmtPct(d.capRate)}</b></div>
+          <div class="m"><span>DSCR</span><b>${fmtX(d.dscr)}</b></div>
         </div>
 
         <div class="card-actions">
-          <a href="${p.realtorUrl}" target="_blank" rel="noopener">Realtor.com</a>
-          <a href="${p.zillowUrl}" target="_blank" rel="noopener">Zillow</a>
-          <button class="save-btn ${p.isSaved ? 'saved' : ''}" data-id="${escapeHtml(p.id)}">${p.isSaved ? '★ Saved' : '☆ Save'}</button>
-          ${p.isManual ? `<button class="delete-btn" data-id="${escapeHtml(p.id)}" title="Remove this manual entry">&times;</button>` : ''}
+          <button class="details-btn" data-id="${escapeHtml(p.id)}">Details</button>
+          <button class="save-btn ${p.saved ? 'saved' : ''}" data-id="${escapeHtml(p.id)}">${p.saved ? '★ Saved' : '☆ Save'}</button>
+          <a href="https://www.zillow.com/homes/${q}_rb/" target="_blank" rel="noopener">Zillow</a>
+        </div>
+        <div class="card-actions">
+          <button class="edit-btn" data-id="${escapeHtml(p.id)}">Edit</button>
+          <button class="delete-btn" data-id="${escapeHtml(p.id)}" title="Remove this property">Delete</button>
         </div>
       `;
       grid.appendChild(card);
@@ -1238,96 +1399,48 @@
 
     grid.querySelectorAll(".save-btn").forEach(btn => {
       btn.addEventListener("click", () => {
-        const id = btn.dataset.id;
-        if (savedIds.has(id)) savedIds.delete(id); else savedIds.add(id);
-        saveSet(LS.savedIds, savedIds);
-        const p = allProperties.find(x => x.id === id);
-        if (p) p.isSaved = savedIds.has(id);
-        render();
+        const p = properties.find(x => x.id === btn.dataset.id);
+        if (p) { p.saved = !p.saved; saveProperties(); render(); }
       });
     });
-
+    grid.querySelectorAll(".details-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const p = properties.find(x => x.id === btn.dataset.id);
+        if (p) openDetailsModal(p);
+      });
+    });
+    grid.querySelectorAll(".edit-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const p = properties.find(x => x.id === btn.dataset.id);
+        if (p) openPropModal(p);
+      });
+    });
     grid.querySelectorAll(".delete-btn").forEach(btn => {
-      btn.addEventListener("click", () => removeManualProperty(btn.dataset.id));
+      btn.addEventListener("click", () => {
+        if (confirm("Remove this property from your tracker?")) deleteProperty(btn.dataset.id);
+      });
     });
   }
 
   function updateStats(){
-    const visible = allProperties.filter(p => !hiddenZips.has(p.zip));
+    const visible = properties.filter(p => !hiddenZips.has(p.zip)).map(p => ({ p, d: computeDeal(p, assumptions) }));
     const total = visible.length;
-    const strong = visible.filter(p => p.verdictKey === "strong").length;
-    const newToday = visible.filter(p => p.isNew).length;
-    const avg = total ? Math.round(visible.reduce((s,p) => s + p.score, 0) / total) : 0;
-    const saved = visible.filter(p => savedIds.has(p.id)).length;
+    const strong = visible.filter(x => x.d.verdictKey === "strong").length;
+    const avgCF = total ? visible.reduce((s,x) => s + x.d.monthlyCashFlow, 0) / total : 0;
+    const avgCoC = total ? visible.reduce((s,x) => s + x.d.cashOnCash, 0) / total : 0;
+    const saved = visible.filter(x => x.p.saved).length;
 
     document.getElementById("statTotal").textContent = total;
     document.getElementById("statStrong").textContent = strong;
-    document.getElementById("statNew").textContent = newToday;
-    document.getElementById("statAvg").textContent = avg;
+    document.getElementById("statAvgCF").textContent = fmtMoney(avgCF);
+    document.getElementById("statAvgCoC").textContent = fmtPct(avgCoC);
     document.getElementById("statSaved").textContent = saved;
   }
 
-  function escapeHtml(str){
-    return String(str).replace(/[&<>"']/g, ch => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[ch]));
-  }
-
-  // `details` is tucked behind a disclosure so a long error can't swallow
-  // the whole phone screen.
-  function showBanner(type, msg, details){
+  function showBanner(type, msg){
     banner.className = "banner show " + type;
-    banner.textContent = "";
-    const line = document.createElement("div");
-    line.textContent = msg;
-    banner.appendChild(line);
-    if (details) {
-      const d = document.createElement("details");
-      const s = document.createElement("summary");
-      s.textContent = "Details";
-      const body = document.createElement("div");
-      body.className = "banner-details";
-      body.textContent = details;
-      d.appendChild(s);
-      d.appendChild(body);
-      banner.appendChild(d);
-    }
-  }
-  function hideBanner(){
-    banner.className = "banner";
-    banner.textContent = "";
-  }
-
-  function updateDebugPanel(){
-    debugPanel.textContent = "usingSampleData: " + usingSampleData + "\n\n" +
-      JSON.stringify(lastRawResponses, null, 2).slice(0, 20000);
-  }
-
-  // ---------- Sample data fallback ----------
-  function generateSampleData(){
-    const samples = [];
-    const streets = ["N Ritter Ave","E Washington St","S Emerson Ave","E Southport Rd","S East St","E Troy Ave","S Meridian St","Churchman Ave"];
-    let n = 0;
-    ZIPS.forEach((z, zi) => {
-      const count = 3 + (zi % 3);
-      for (let i = 0; i < count; i++) {
-        n++;
-        const price = 125000 + Math.floor(Math.random() * 60000);
-        const beds = 2 + Math.floor(Math.random() * 3);
-        const sqft = 950 + Math.floor(Math.random() * 900);
-        const daysAgo = Math.floor(Math.random() * 20);
-        const listDate = new Date(Date.now() - daysAgo * 86400000).toISOString();
-        samples.push(normalizeListing({
-          property_id: `SAMPLE-${z.zip}-${i}`,
-          list_price: price,
-          list_date: listDate,
-          description: { beds, baths: 1 + Math.floor(Math.random()*2), sqft, year_built: 1945 + Math.floor(Math.random()*70), type: "single_family" },
-          location: { address: { line: `${1000 + n*7} ${streets[n % streets.length]}`, city: "Indianapolis", state_code: "IN", postal_code: z.zip } },
-          permalink: null
-        }, z.zip));
-      }
-    });
-    return samples;
+    banner.textContent = msg;
+    setTimeout(() => { banner.className = "banner"; }, 4000);
   }
 
 })();
