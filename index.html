@@ -436,10 +436,12 @@
           <div class="field">
             <label for="pTaxes">Annual Property Taxes</label>
             <input type="number" id="pTaxes" min="0" placeholder="2100">
+            <span class="field-hint" id="pTaxesHint"></span>
           </div>
           <div class="field">
             <label for="pInsurance">Annual Insurance</label>
             <input type="number" id="pInsurance" min="0" placeholder="1400">
+            <span class="field-hint" id="pInsuranceHint"></span>
           </div>
         </div>
         <button type="button" class="advanced-toggle" id="advancedToggleBtn">+ Show other expenses (HOA, other income, etc.)</button>
@@ -509,6 +511,22 @@
         </div>
       </div>
       <div class="form-section">
+        <div class="sec-title">Tax &amp; Insurance Auto-Estimate</div>
+        <p class="modal-sub" style="margin-bottom:10px;">Used to pre-fill a property's Taxes/Insurance fields from its purchase price — only when those fields are still empty, never overwrites a number you've typed.</p>
+        <div class="form-grid">
+          <div class="field">
+            <label for="aTaxPct">Property Tax Estimate %</label>
+            <input type="number" id="aTaxPct" step="any" min="0" max="1">
+            <span class="field-hint">Indiana caps non-homestead (rental) property tax at 2% of assessed value — this defaults to that cap, using purchase price as a stand-in for assessed value.</span>
+          </div>
+          <div class="field">
+            <label for="aInsurancePct">Insurance Estimate %</label>
+            <input type="number" id="aInsurancePct" step="any" min="0" max="1">
+            <span class="field-hint">No comparable hard rule exists for insurance — this is a rough Midwest landlord-policy rule of thumb, not a real quote.</span>
+          </div>
+        </div>
+      </div>
+      <div class="form-section">
         <div class="sec-title">Buy Criteria (used by the scorecard)</div>
         <div class="form-grid">
           <div class="field"><label for="aMinCF">Min Monthly Cash Flow ($)</label><input type="number" id="aMinCF" step="any"></div>
@@ -570,6 +588,8 @@
     capexPct: 0.08,
     leasingPct: 0.04,
     appreciationPct: 0.03,
+    taxEstimatePct: 0.02,
+    insuranceEstimatePct: 0.009,
     minMonthlyCashFlow: 200,
     minCoCReturn: 0.08,
     minCapRate: 0.07,
@@ -854,6 +874,42 @@
     if (meta) document.getElementById("pNeighborhood").value = meta.name;
   });
 
+  // ---------- Auto-estimate taxes & insurance from purchase price ----------
+  // Only fills empty fields — never overwrites a number you've typed or an
+  // existing saved value. Runs on every purchase-price keystroke, and once
+  // right after Smart Paste fills in a price programmatically (since
+  // setting .value there doesn't itself fire an "input" event).
+  const pPurchasePriceEl = document.getElementById("pPurchasePrice");
+  const pTaxesEl = document.getElementById("pTaxes");
+  const pInsuranceEl = document.getElementById("pInsurance");
+  const pTaxesHint = document.getElementById("pTaxesHint");
+  const pInsuranceHint = document.getElementById("pInsuranceHint");
+
+  const TAX_HINT = () => `Auto-estimated at ${fmtPct(assumptions.taxEstimatePct)} of purchase price (Indiana's non-homestead cap) — replace with the actual figure from the Marion County assessor once you have it.`;
+  const INSURANCE_HINT = () => `Auto-estimated at ${fmtPct(assumptions.insuranceEstimatePct)} of purchase price (rough rule of thumb) — replace with a real landlord policy quote.`;
+
+  function autoEstimateTaxAndInsurance(){
+    const price = Number(pPurchasePriceEl.value) || 0;
+    if (price <= 0) return;
+    if (!pTaxesEl.value) { pTaxesEl.value = Math.round(price * assumptions.taxEstimatePct); pTaxesHint.textContent = TAX_HINT(); }
+    if (!pInsuranceEl.value) { pInsuranceEl.value = Math.round(price * assumptions.insuranceEstimatePct); pInsuranceHint.textContent = INSURANCE_HINT(); }
+  }
+  function resetTaxInsuranceHints(){
+    pTaxesHint.textContent = "";
+    pInsuranceHint.textContent = "";
+  }
+  pPurchasePriceEl.addEventListener("input", autoEstimateTaxAndInsurance);
+  // Typing a real number into either field marks it manual (hint clears);
+  // clearing it back out re-arms the auto-estimate for that field only.
+  pTaxesEl.addEventListener("input", () => {
+    if (pTaxesEl.value) pTaxesHint.textContent = "";
+    else autoEstimateTaxAndInsurance();
+  });
+  pInsuranceEl.addEventListener("input", () => {
+    if (pInsuranceEl.value) pInsuranceHint.textContent = "";
+    else autoEstimateTaxAndInsurance();
+  });
+
   // ---------- Add / Edit Property modal ----------
   function openPropModal(property){
     editingId = property ? property.id : null;
@@ -862,6 +918,7 @@
     propFormError.classList.remove("show");
     smartPasteInput.value = "";
     clearAttachedShot();
+    resetTaxInsuranceHints();
 
     const f = (id) => document.getElementById(id);
     if (property) {
@@ -1023,6 +1080,7 @@
     if (parsed.sqft) f("pSqft").value = parsed.sqft;
     if (parsed.yearBuilt) f("pYear").value = parsed.yearBuilt;
     if (parsed.sourceUrl) f("pMlsLink").value = parsed.sourceUrl;
+    autoEstimateTaxAndInsurance(); // setting price above doesn't fire an "input" event on its own
 
     const missing = ["addrLine","price"].filter(k => !parsed[k]);
     if (missing.length) {
@@ -1174,6 +1232,8 @@
     f("aCapex").value = assumptions.capexPct;
     f("aLeasing").value = assumptions.leasingPct;
     f("aAppreciation").value = assumptions.appreciationPct;
+    f("aTaxPct").value = assumptions.taxEstimatePct;
+    f("aInsurancePct").value = assumptions.insuranceEstimatePct;
     f("aMinCF").value = assumptions.minMonthlyCashFlow;
     f("aMinCoC").value = assumptions.minCoCReturn;
     f("aMinCap").value = assumptions.minCapRate;
@@ -1201,6 +1261,7 @@
       closingCostsPct: f("aClosingPct"), reservesAtClose: f("aReserves"),
       vacancyPct: f("aVacancy"), pmPct: f("aPm"), maintenancePct: f("aMaint"),
       capexPct: f("aCapex"), leasingPct: f("aLeasing"), appreciationPct: f("aAppreciation"),
+      taxEstimatePct: f("aTaxPct"), insuranceEstimatePct: f("aInsurancePct"),
       minMonthlyCashFlow: f("aMinCF"), minCoCReturn: f("aMinCoC"), minCapRate: f("aMinCap"),
       minDSCR: f("aMinDscr"), min1PctRule: f("aMin1pct"), maxAllInCost: f("aMaxAllIn"),
     };
