@@ -287,12 +287,12 @@
     <div class="control-group">
       <div class="gl">Sort</div>
       <select id="sortSelect">
+        <option value="newest" selected>Newest Added</option>
         <option value="score">Tests Passed</option>
         <option value="cashflow">Cash Flow (high to low)</option>
         <option value="coc">Cash-on-Cash (high to low)</option>
         <option value="price_asc">Price (low to high)</option>
         <option value="price_desc">Price (high to low)</option>
-        <option value="newest">Newest Added</option>
       </select>
     </div>
   </div>
@@ -609,7 +609,7 @@
   let assumptions = loadAssumptions();
   let hiddenZips = loadSet(LS.hiddenZips);
   let currentFilter = "all";
-  let currentSort = "score";
+  let currentSort = "newest";
   let editingId = null;
 
   function loadSet(key){
