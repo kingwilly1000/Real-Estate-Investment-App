@@ -577,6 +577,37 @@
   </div>
 </div>
 
+<!-- ===================== Property Assumptions Modal (per-property overrides) ==========
+     Placed after the Details modal in the DOM so it stacks visually on top
+     of it — both share the same overlay z-index, and equal-z-index
+     siblings paint in DOM order, so this one has to come second to be
+     clickable when opened from within Details. ============================= -->
+<div class="modal-overlay" id="propAssumptionsModalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h2 id="propAssumptionsTitle">Assumptions for This Property</h2>
+        <p class="modal-sub">Leave a field blank to keep using the shared Assumptions default (shown as its placeholder). Fill one in to override it for this property only.</p>
+      </div>
+      <button id="propAssumptionsCloseBtn">&times;</button>
+    </div>
+    <form id="propAssumptionsForm">
+      <div class="form-section">
+        <div class="sec-title">Financing</div>
+        <div class="form-grid" id="paFinancingGrid"></div>
+      </div>
+      <div class="form-section">
+        <div class="sec-title">Operating Assumptions</div>
+        <div class="form-grid" id="paOperatingGrid"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="propAssumptionsClearBtn">Clear All Overrides</button>
+        <button type="submit" class="primary">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
 (function(){
   "use strict";
@@ -615,6 +646,27 @@
     min1PctRule: 0.009,
     maxAllInCost: 175000,
   };
+
+  // Fields a single property can override away from the shared Assumptions.
+  // Buy-criteria thresholds are deliberately excluded — those are the
+  // investor's own bar and stay global so every property is judged
+  // consistently. fmt controls the input step/display: "pct" fields are
+  // stored as fractions (0.08 = 8%), "num" fields are plain numbers/dollars.
+  const OVERRIDABLE_FIELDS = [
+    { key: "downPaymentPct",     label: "Down Payment %",             group: "Financing", fmt: "pct" },
+    { key: "interestRate",       label: "Interest Rate (annual)",     group: "Financing", fmt: "pct" },
+    { key: "loanTermYears",      label: "Loan Term (years)",          group: "Financing", fmt: "num" },
+    { key: "closingCostsPct",    label: "Closing Costs %",            group: "Financing", fmt: "pct" },
+    { key: "reservesAtClose",    label: "Reserves Held at Close ($)", group: "Financing", fmt: "num" },
+    { key: "vacancyPct",         label: "Vacancy Rate",               group: "Operating", fmt: "pct" },
+    { key: "pmPct",              label: "Property Management %",      group: "Operating", fmt: "pct" },
+    { key: "maintenancePct",     label: "Maintenance %",              group: "Operating", fmt: "pct" },
+    { key: "capexPct",           label: "CapEx Reserve %",            group: "Operating", fmt: "pct" },
+    { key: "leasingPct",         label: "Leasing / Turnover %",       group: "Operating", fmt: "pct" },
+    { key: "appreciationPct",    label: "Annual Appreciation",        group: "Operating", fmt: "pct" },
+    { key: "taxEstimatePct",     label: "Property Tax Estimate %",    group: "Operating", fmt: "pct" },
+    { key: "insuranceEstimatePct", label: "Insurance Estimate %",     group: "Operating", fmt: "pct" },
+  ];
 
   const LS = {
     properties: "iuw_properties",
@@ -696,32 +748,39 @@
   }
 
   function computeDeal(p, a){
+    // Per-property overrides (interest rate, vacancy%, etc. — anything set
+    // via "Edit Assumptions for This Property") take precedence over the
+    // shared Assumptions; any key not overridden falls through to the
+    // global value. Buy-criteria thresholds are intentionally excluded from
+    // this merge (see OVERRIDABLE_FIELDS) — they're the investor's own bar,
+    // not a per-deal input, so they always use "a" directly further below.
+    const ea = Object.assign({}, a, p.assumptionOverrides || {});
+
     const purchasePrice = Number(p.purchasePrice) || 0;
     const rehab = Number(p.rehabBudget) || 0;
     const allInCost = purchasePrice + rehab;
 
-    // A property can override the global down-payment % with its own dollar
-    // amount (set via the What-If slider in Details) — otherwise it falls
-    // back to the shared Assumptions percentage like everything else.
-    const hasOverride = p.downPaymentOverride !== null && p.downPaymentOverride !== undefined && p.downPaymentOverride >= 0;
-    const downPayment = hasOverride ? Number(p.downPaymentOverride) : purchasePrice * a.downPaymentPct;
+    // Down payment also supports a direct dollar override (set via the
+    // What-If slider in Details), which takes priority over the % above.
+    const hasDollarOverride = p.downPaymentOverride !== null && p.downPaymentOverride !== undefined && p.downPaymentOverride >= 0;
+    const downPayment = hasDollarOverride ? Number(p.downPaymentOverride) : purchasePrice * ea.downPaymentPct;
     const loanAmount = Math.max(0, purchasePrice - downPayment);
-    const closingCosts = purchasePrice * a.closingCostsPct;
-    const pi = monthlyPI(a.interestRate, a.loanTermYears, loanAmount);
-    const totalCashInvested = downPayment + closingCosts + rehab + a.reservesAtClose;
+    const closingCosts = purchasePrice * ea.closingCostsPct;
+    const pi = monthlyPI(ea.interestRate, ea.loanTermYears, loanAmount);
+    const totalCashInvested = downPayment + closingCosts + rehab + ea.reservesAtClose;
 
     const rent = Number(p.monthlyRent) || 0;
     const otherIncome = Number(p.otherIncome) || 0;
     const grossScheduledIncome = rent + otherIncome;
-    const vacancyLoss = -grossScheduledIncome * a.vacancyPct;
+    const vacancyLoss = -grossScheduledIncome * ea.vacancyPct;
     const effectiveGrossIncome = grossScheduledIncome + vacancyLoss;
 
     const monthlyTaxes = (Number(p.annualTaxes) || 0) / 12;
     const monthlyInsurance = (Number(p.annualInsurance) || 0) / 12;
-    const pm = effectiveGrossIncome * a.pmPct;
-    const maintenance = grossScheduledIncome * a.maintenancePct;
-    const capex = grossScheduledIncome * a.capexPct;
-    const leasing = grossScheduledIncome * a.leasingPct;
+    const pm = effectiveGrossIncome * ea.pmPct;
+    const maintenance = grossScheduledIncome * ea.maintenancePct;
+    const capex = grossScheduledIncome * ea.capexPct;
+    const leasing = grossScheduledIncome * ea.leasingPct;
     const hoa = Number(p.hoaMonthly) || 0;
     const lawn = Number(p.lawnSnowTrash) || 0;
     const ownerUtil = Number(p.ownerUtilities) || 0;
@@ -746,13 +805,13 @@
     const discountToList = listPrice > 0 ? purchasePrice / listPrice - 1 : null;
     const grm = rent > 0 ? allInCost / (rent * 12) : 0;
 
-    const beDenominator = (1 - a.vacancyPct) * (1 - a.pmPct) - a.maintenancePct - a.capexPct - a.leasingPct;
+    const beDenominator = (1 - ea.vacancyPct) * (1 - ea.pmPct) - ea.maintenancePct - ea.capexPct - ea.leasingPct;
     const beNumerator = monthlyTaxes + monthlyInsurance + hoa + lawn + ownerUtil + misc + pi;
     const breakEvenRent = beDenominator > 0 ? beNumerator / beDenominator : null;
     const rentCushion = (breakEvenRent && breakEvenRent > 0) ? (rent / breakEvenRent - 1) : null;
 
-    const year1Paydown = year1PrincipalPaydown(a.interestRate, a.loanTermYears, loanAmount);
-    const year1Appreciation = allInCost * a.appreciationPct;
+    const year1Paydown = year1PrincipalPaydown(ea.interestRate, ea.loanTermYears, loanAmount);
+    const year1Appreciation = allInCost * ea.appreciationPct;
     const totalYear1ReturnDollar = annualCashFlow + year1Paydown + year1Appreciation;
     const totalYear1ReturnPct = totalCashInvested > 0 ? totalYear1ReturnDollar / totalCashInvested : 0;
 
@@ -778,7 +837,7 @@
       cashOnCash, capRate, dscr, onePctRule, expenseRatio, pricePerSqft, rentPerSqft, discountToList, grm,
       breakEvenRent, rentCushion,
       year1Paydown, year1Appreciation, totalYear1ReturnDollar, totalYear1ReturnPct,
-      tests, testsPassed, verdict, verdictKey,
+      tests, testsPassed, verdict, verdictKey, effectiveAssumptions: ea,
     };
   }
 
@@ -1320,6 +1379,77 @@
     showBanner("info", "Assumptions saved — every property recalculated.");
   });
 
+  // ---------- Property Assumptions modal (per-property overrides) ----------
+  const propAssumptionsModalOverlay = document.getElementById("propAssumptionsModalOverlay");
+  const propAssumptionsTitle = document.getElementById("propAssumptionsTitle");
+  const propAssumptionsCloseBtn = document.getElementById("propAssumptionsCloseBtn");
+  const propAssumptionsForm = document.getElementById("propAssumptionsForm");
+  const propAssumptionsClearBtn = document.getElementById("propAssumptionsClearBtn");
+  const paFinancingGrid = document.getElementById("paFinancingGrid");
+  const paOperatingGrid = document.getElementById("paOperatingGrid");
+  let propAssumptionsTargetId = null;
+
+  function fieldInputId(key){ return "pa_" + key; }
+
+  // Built once — each field's placeholder (the current global default) gets
+  // refreshed every time the modal opens, since Assumptions can change.
+  OVERRIDABLE_FIELDS.forEach(field => {
+    const wrap = document.createElement("div");
+    wrap.className = "field" + (field.fmt === "num" && field.key === "reservesAtClose" ? " full" : "");
+    const step = field.fmt === "pct" ? "any" : (field.key === "loanTermYears" ? "1" : "any");
+    const min = field.key === "loanTermYears" ? "1" : "0";
+    wrap.innerHTML = `<label for="${fieldInputId(field.key)}">${field.label}</label><input type="number" id="${fieldInputId(field.key)}" step="${step}" min="${min}">`;
+    (field.group === "Financing" ? paFinancingGrid : paOperatingGrid).appendChild(wrap);
+  });
+
+  function openPropAssumptionsModal(property){
+    propAssumptionsTargetId = property.id;
+    propAssumptionsTitle.textContent = "Assumptions for " + property.address;
+    const overrides = property.assumptionOverrides || {};
+    OVERRIDABLE_FIELDS.forEach(field => {
+      const input = document.getElementById(fieldInputId(field.key));
+      input.placeholder = String(assumptions[field.key]);
+      input.value = (overrides[field.key] !== undefined && overrides[field.key] !== null) ? overrides[field.key] : "";
+    });
+    propAssumptionsModalOverlay.classList.add("show");
+  }
+  function closePropAssumptionsModal(){
+    propAssumptionsModalOverlay.classList.remove("show");
+    propAssumptionsTargetId = null;
+  }
+  propAssumptionsCloseBtn.addEventListener("click", closePropAssumptionsModal);
+  propAssumptionsModalOverlay.addEventListener("click", (e) => { if (e.target === propAssumptionsModalOverlay) closePropAssumptionsModal(); });
+
+  propAssumptionsForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const p = properties.find(x => x.id === propAssumptionsTargetId);
+    if (!p) { closePropAssumptionsModal(); return; }
+    const overrides = {};
+    OVERRIDABLE_FIELDS.forEach(field => {
+      const raw = document.getElementById(fieldInputId(field.key)).value;
+      if (raw !== "") overrides[field.key] = Number(raw);
+    });
+    p.assumptionOverrides = overrides;
+    saveProperties();
+    render();
+    closePropAssumptionsModal();
+    const openId = detailsModalOverlay.classList.contains("show") ? p.id : null;
+    if (openId) openDetailsModal(p); // refresh the numbers underneath if Details is still open
+    showBanner("info", Object.keys(overrides).length
+      ? `Saved ${Object.keys(overrides).length} custom assumption(s) for ${p.address}.`
+      : `No overrides set for ${p.address} — using Assumptions defaults.`);
+  });
+
+  propAssumptionsClearBtn.addEventListener("click", () => {
+    OVERRIDABLE_FIELDS.forEach(field => { document.getElementById(fieldInputId(field.key)).value = ""; });
+    const p = properties.find(x => x.id === propAssumptionsTargetId);
+    if (p) {
+      p.assumptionOverrides = {};
+      saveProperties();
+      render();
+    }
+  });
+
   // ---------- Details modal ----------
   function openDetailsModal(property){
     const d = computeDeal(property, assumptions);
@@ -1352,6 +1482,17 @@
           <button type="button" class="primary" id="wiApplyBtn">Save for This Property</button>
         </div>
         <p class="whatif-status" id="wiStatus">${hasOverride ? "This property is using a custom down payment, not the Assumptions default." : ""}</p>
+      </div>
+    `;
+
+    const overrideCount = Object.keys(property.assumptionOverrides || {}).length;
+    html += `
+      <div class="whatif-panel">
+        <div class="sec-title">Property Assumptions</div>
+        <p class="modal-sub" style="margin-bottom:10px;">${overrideCount
+          ? `${overrideCount} field${overrideCount === 1 ? "" : "s"} customized for this property (interest rate, vacancy%, etc.) — everything else follows the shared Assumptions.`
+          : "This property currently follows the shared Assumptions for every field except down payment."}</p>
+        <button type="button" id="editPropAssumptionsBtn">Edit Assumptions for This Property</button>
       </div>
     `;
 
@@ -1427,6 +1568,7 @@
 
     detailsBody.innerHTML = html;
     wireWhatIfPanel(property, purchasePrice);
+    document.getElementById("editPropAssumptionsBtn").addEventListener("click", () => openPropAssumptionsModal(property));
     detailsModalOverlay.classList.add("show");
   }
   detailsCloseBtn.addEventListener("click", () => detailsModalOverlay.classList.remove("show"));
@@ -1578,7 +1720,7 @@
 
         <div class="badges">
           ${isNew ? '<span class="badge new">New</span>' : ''}
-          ${(p.downPaymentOverride !== null && p.downPaymentOverride !== undefined) ? '<span class="badge custom">Custom DP</span>' : ''}
+          ${((p.downPaymentOverride !== null && p.downPaymentOverride !== undefined) || Object.keys(p.assumptionOverrides || {}).length > 0) ? '<span class="badge custom">Customized</span>' : ''}
           <span class="badge zip">${p.zip}${meta ? " &middot; " + meta.grade : ""}</span>
           ${p.beds ? `<span class="badge zip">${p.beds} bd</span>` : ''}
         </div>
