@@ -186,6 +186,20 @@
   .test-pass{background:var(--green-bg);color:#5ed892;}
   .test-fail{background:var(--red-bg);color:#f1a3a3;}
 
+  .whatif-panel{background:var(--bg);border:1px solid var(--yellow);border-radius:10px;padding:14px;margin-bottom:16px;}
+  .whatif-panel .sec-title{color:var(--yellow);border-bottom-color:var(--border);}
+  .whatif-row{display:flex;align-items:center;gap:12px;margin-bottom:4px;}
+  .whatif-row input[type=range]{flex:1;accent-color:var(--accent);height:24px;}
+  .whatif-row input[type=number]{width:110px;padding:8px 9px;border-radius:8px;border:1px solid var(--border);
+    background:var(--card);color:var(--text);font-size:14px;}
+  .whatif-pct-label{font-size:12px;color:var(--text-dim);width:34px;text-align:right;flex-shrink:0;}
+  .whatif-results{margin-top:10px;}
+  .whatif-status{font-size:12px;color:var(--text-dim);margin:8px 0 0;min-height:16px;}
+  .whatif-footer{display:flex;gap:8px;margin-top:10px;}
+  .whatif-footer button{flex:1;font-size:12.5px;padding:9px 10px;}
+
+  .badge.custom{background:var(--yellow-bg);color:#e8c96a;}
+
   /* ---------- Phone layout (iPhone SE 375px → Pro Max 430px) ---------- */
   @media (max-width:700px){
     .container{
@@ -240,6 +254,10 @@
     .shot-preview-wrap{align-items:flex-start;}
     .shot-actions{flex-direction:column;align-items:stretch;}
     .shot-actions button{width:100%;}
+
+    .whatif-row input[type=number]{font-size:16px;width:130px;}
+    .whatif-footer{flex-direction:column;}
+    .whatif-results{grid-template-columns:1fr;}
   }
 
   @media (max-width:380px){
@@ -682,8 +700,12 @@
     const rehab = Number(p.rehabBudget) || 0;
     const allInCost = purchasePrice + rehab;
 
-    const downPayment = purchasePrice * a.downPaymentPct;
-    const loanAmount = purchasePrice - downPayment;
+    // A property can override the global down-payment % with its own dollar
+    // amount (set via the What-If slider in Details) — otherwise it falls
+    // back to the shared Assumptions percentage like everything else.
+    const hasOverride = p.downPaymentOverride !== null && p.downPaymentOverride !== undefined && p.downPaymentOverride >= 0;
+    const downPayment = hasOverride ? Number(p.downPaymentOverride) : purchasePrice * a.downPaymentPct;
+    const loanAmount = Math.max(0, purchasePrice - downPayment);
     const closingCosts = purchasePrice * a.closingCostsPct;
     const pi = monthlyPI(a.interestRate, a.loanTermYears, loanAmount);
     const totalCashInvested = downPayment + closingCosts + rehab + a.reservesAtClose;
@@ -1307,7 +1329,32 @@
     function row(label, value, cls){ return `<div class="detail-row"><span class="lbl">${label}</span><span class="val ${cls||''}">${value}</span></div>`; }
     function section(title){ return `<div class="form-section"><div class="sec-title">${title}</div>`; }
 
+    const purchasePrice = Number(property.purchasePrice) || 0;
+    const hasOverride = property.downPaymentOverride !== null && property.downPaymentOverride !== undefined && property.downPaymentOverride >= 0;
+    const currentDownDollar = hasOverride ? Number(property.downPaymentOverride) : Math.round(purchasePrice * assumptions.downPaymentPct);
+    const currentDownPct = purchasePrice > 0 ? Math.round((currentDownDollar / purchasePrice) * 100) : 0;
+
     let html = "";
+    html += `
+      <div class="whatif-panel">
+        <div class="sec-title">What-If: Down Payment</div>
+        <div class="whatif-row">
+          <input type="range" id="wiDownPct" min="0" max="100" step="1" value="${currentDownPct}">
+          <span class="whatif-pct-label" id="wiPctLabel">${currentDownPct}%</span>
+        </div>
+        <div class="whatif-row">
+          <label for="wiDownDollar" style="font-size:12px;color:var(--text-dim);flex-shrink:0;">Down payment $</label>
+          <input type="number" id="wiDownDollar" min="0" step="500" value="${currentDownDollar}">
+        </div>
+        <div class="metric-grid whatif-results" id="wiResults"></div>
+        <div class="whatif-footer">
+          <button type="button" id="wiResetBtn">Reset to Assumptions Default</button>
+          <button type="button" class="primary" id="wiApplyBtn">Save for This Property</button>
+        </div>
+        <p class="whatif-status" id="wiStatus">${hasOverride ? "This property is using a custom down payment, not the Assumptions default." : ""}</p>
+      </div>
+    `;
+
     html += section("1. Property");
     html += row("Beds / Baths", `${property.beds || "—"} / ${property.baths || "—"}`);
     html += row("Square Feet", property.sqft ? property.sqft.toLocaleString() : "—");
@@ -1322,7 +1369,7 @@
     html += row("Discount to List", d.discountToList !== null ? fmtPct(d.discountToList) : "—");
     html += row("Rehab Budget", fmtMoney(property.rehabBudget));
     html += row("All-In Cost", fmtMoney(d.allInCost), "total");
-    html += row("Down Payment", fmtMoney(d.downPayment));
+    html += row("Down Payment", fmtMoney(d.downPayment) + (hasOverride ? " (custom)" : ""));
     html += row("Loan Amount", fmtMoney(d.loanAmount));
     html += row("Closing Costs", fmtMoney(d.closingCosts));
     html += row("Monthly Principal & Interest", fmtMoney(d.pi));
@@ -1379,10 +1426,84 @@
     html += "</div>";
 
     detailsBody.innerHTML = html;
+    wireWhatIfPanel(property, purchasePrice);
     detailsModalOverlay.classList.add("show");
   }
   detailsCloseBtn.addEventListener("click", () => detailsModalOverlay.classList.remove("show"));
   detailsModalOverlay.addEventListener("click", (e) => { if (e.target === detailsModalOverlay) detailsModalOverlay.classList.remove("show"); });
+
+  // Live what-if recompute — drag the slider or type a $ amount and every
+  // return metric updates instantly, without touching the saved property
+  // until "Save for This Property" is clicked.
+  function wireWhatIfPanel(property, purchasePrice){
+    const wiDownPct = document.getElementById("wiDownPct");
+    const wiDownDollar = document.getElementById("wiDownDollar");
+    const wiPctLabel = document.getElementById("wiPctLabel");
+    const wiResults = document.getElementById("wiResults");
+    const wiStatus = document.getElementById("wiStatus");
+    const wiApplyBtn = document.getElementById("wiApplyBtn");
+    const wiResetBtn = document.getElementById("wiResetBtn");
+
+    function metric(label, value, cls){ return `<div class="m"><span>${label}</span><b class="${cls||''}">${value}</b></div>`; }
+
+    function recompute(downDollar){
+      const tempProp = Object.assign({}, property, { downPaymentOverride: downDollar });
+      const d = computeDeal(tempProp, assumptions);
+      wiResults.innerHTML =
+        metric("Down Payment", fmtMoney(downDollar)) +
+        metric("Loan Amount", fmtMoney(d.loanAmount)) +
+        metric("Monthly P&I", fmtMoney(d.pi)) +
+        metric("Monthly Cash Flow", fmtMoney(d.monthlyCashFlow), d.monthlyCashFlow >= 0 ? "pos" : "neg") +
+        metric("Cash-on-Cash Return", fmtPct(d.cashOnCash)) +
+        metric("DSCR", fmtX(d.dscr));
+      return d;
+    }
+
+    function syncFromPct(){
+      const pct = Number(wiDownPct.value);
+      wiPctLabel.textContent = pct + "%";
+      const dollar = Math.round(purchasePrice * pct / 100);
+      wiDownDollar.value = dollar;
+      recompute(dollar);
+    }
+    function syncFromDollar(){
+      const dollar = Math.max(0, Number(wiDownDollar.value) || 0);
+      const pct = purchasePrice > 0 ? Math.round((dollar / purchasePrice) * 100) : 0;
+      wiDownPct.value = Math.min(100, pct);
+      wiPctLabel.textContent = wiDownPct.value + "%";
+      recompute(dollar);
+    }
+
+    wiDownPct.addEventListener("input", syncFromPct);
+    wiDownDollar.addEventListener("input", syncFromDollar);
+
+    wiApplyBtn.addEventListener("click", () => {
+      const dollar = Math.max(0, Number(wiDownDollar.value) || 0);
+      const p = properties.find(x => x.id === property.id);
+      if (p) {
+        p.downPaymentOverride = dollar;
+        saveProperties();
+        render();
+      }
+      wiStatus.textContent = `Saved — this property now uses a custom down payment of ${fmtMoney(dollar)} instead of the Assumptions default.`;
+    });
+    wiResetBtn.addEventListener("click", () => {
+      const p = properties.find(x => x.id === property.id);
+      if (p) {
+        p.downPaymentOverride = null;
+        saveProperties();
+        render();
+      }
+      const defaultDollar = Math.round(purchasePrice * assumptions.downPaymentPct);
+      wiDownDollar.value = defaultDollar;
+      wiDownPct.value = purchasePrice > 0 ? Math.round((defaultDollar / purchasePrice) * 100) : 0;
+      wiPctLabel.textContent = wiDownPct.value + "%";
+      recompute(defaultDollar);
+      wiStatus.textContent = "Reset — back to using the Assumptions default down payment %.";
+    });
+
+    recompute(Number(wiDownDollar.value) || 0);
+  }
 
   // ---------- Rendering ----------
   function scoreClass(testsPassed){
@@ -1457,6 +1578,7 @@
 
         <div class="badges">
           ${isNew ? '<span class="badge new">New</span>' : ''}
+          ${(p.downPaymentOverride !== null && p.downPaymentOverride !== undefined) ? '<span class="badge custom">Custom DP</span>' : ''}
           <span class="badge zip">${p.zip}${meta ? " &middot; " + meta.grade : ""}</span>
           ${p.beds ? `<span class="badge zip">${p.beds} bd</span>` : ''}
         </div>
