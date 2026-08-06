@@ -30,6 +30,12 @@
     padding-bottom:calc(60px + env(safe-area-inset-bottom));}
   header .container{padding-top:0;padding-bottom:0;}
 
+  .top-tabs{display:flex;gap:4px;margin-top:14px;border-bottom:1px solid var(--border);}
+  .top-tab{background:none;border:none;border-radius:0;border-bottom:2px solid transparent;padding:9px 4px;margin-right:18px;
+    color:var(--text-dim);font-size:14px;font-weight:600;}
+  .top-tab:hover{background:none;color:var(--text);}
+  .top-tab.active{color:var(--text);border-bottom-color:var(--accent);}
+
   .action-bar{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
   button{cursor:pointer;font-family:inherit;font-size:13px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);padding:9px 14px;transition:background .15s,border-color .15s;}
   button:hover{background:#232838;border-color:#3a4152;}
@@ -200,6 +206,12 @@
 
   .badge.custom{background:var(--yellow-bg);color:#e8c96a;}
 
+  .notes-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-top:16px;flex-wrap:wrap;}
+  .notes-status{font-size:11.5px;color:var(--text-dim);white-space:nowrap;padding-top:3px;}
+  #notesTextarea{width:100%;min-height:60vh;margin-top:12px;padding:16px;border-radius:10px;border:1px solid var(--border);
+    background:var(--card);color:var(--text);font-family:inherit;font-size:14.5px;line-height:1.6;resize:vertical;}
+  #notesTextarea:focus{outline:none;border-color:var(--accent);}
+
   /* ---------- Phone layout (iPhone SE 375px → Pro Max 430px) ---------- */
   @media (max-width:700px){
     .container{
@@ -211,10 +223,16 @@
     header h1{font-size:17px;}
     header p{font-size:11.5px;}
 
+    .top-tabs{margin-top:10px;}
+    .top-tab{font-size:13px;margin-right:14px;min-height:44px;}
+
     .action-bar{margin-top:8px;}
     .action-bar button{flex:1;padding:10px 8px;min-height:44px;}
 
     .banner{font-size:12px;padding:9px 11px;margin-top:10px;max-height:30vh;overflow-y:auto;}
+
+    .notes-head{margin-top:12px;}
+    #notesTextarea{min-height:50vh;padding:12px;font-size:16px;}
 
     .stats-bar{grid-template-columns:repeat(5,1fr);gap:5px;margin-top:12px;}
     .stat{padding:8px 3px;border-radius:8px;}
@@ -273,7 +291,11 @@
   <div class="container" style="padding-bottom:0;">
     <h1>Indianapolis Property Feed</h1>
     <p>Track properties you're researching &middot; full underwriting auto-calculated</p>
-    <div class="action-bar">
+    <div class="top-tabs" id="topTabs">
+      <button class="top-tab active" data-tab="properties">Properties</button>
+      <button class="top-tab" data-tab="notes">Notes</button>
+    </div>
+    <div class="action-bar" id="propertiesActionBar">
       <button class="primary" id="addPropertyBtn">+ Add Property</button>
       <button id="assumptionsBtn">Assumptions</button>
     </div>
@@ -281,7 +303,7 @@
   </div>
 </header>
 
-<div class="container">
+<div class="container" id="propertiesView">
 
   <div class="stats-bar">
     <div class="stat"><div class="num" id="statTotal">0</div><div class="label">Tracked</div></div>
@@ -333,6 +355,17 @@
     </div>
   </div>
 
+</div>
+
+<div class="container" id="notesView" style="display:none;">
+  <div class="notes-head">
+    <div>
+      <h2 style="margin:0 0 2px;font-size:16px;">Notes</h2>
+      <p class="modal-sub" style="margin:0;">Free-form scratchpad for yourself — market observations, questions for your agent/PM, deals to revisit, anything. Saved automatically as you type, only in this browser.</p>
+    </div>
+    <span class="notes-status" id="notesStatus"></span>
+  </div>
+  <textarea id="notesTextarea" placeholder="e.g.&#10;- Call T&amp;H Realty for rent comps on Irvington block&#10;- Ask assessor about 1420 E Troy Ave reassessment timeline&#10;- Revisit 46237 listings once rates drop"></textarea>
 </div>
 
 <footer>Indianapolis Property Feed &middot; runs entirely in your browser, no server required</footer>
@@ -672,6 +705,7 @@
     properties: "iuw_properties",
     assumptions: "iuw_assumptions",
     hiddenZips: "iuw_hiddenZips",
+    notes: "iuw_notes",
   };
 
   // ---------- State ----------
@@ -883,6 +917,39 @@
   const detailsTitle = document.getElementById("detailsTitle");
   const detailsSub = document.getElementById("detailsSub");
   const detailsBody = document.getElementById("detailsBody");
+
+  // ---------- Top tabs (Properties / Notes) ----------
+  const topTabs = document.getElementById("topTabs");
+  const propertiesView = document.getElementById("propertiesView");
+  const propertiesActionBar = document.getElementById("propertiesActionBar");
+  const notesView = document.getElementById("notesView");
+  const notesTextarea = document.getElementById("notesTextarea");
+  const notesStatus = document.getElementById("notesStatus");
+
+  topTabs.addEventListener("click", (e) => {
+    const btn = e.target.closest(".top-tab");
+    if (!btn) return;
+    document.querySelectorAll(".top-tab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const showNotes = btn.dataset.tab === "notes";
+    propertiesView.style.display = showNotes ? "none" : "block";
+    propertiesActionBar.style.display = showNotes ? "none" : "flex";
+    notesView.style.display = showNotes ? "block" : "none";
+    if (showNotes) notesTextarea.focus();
+  });
+
+  // ---------- Notes (free-form scratchpad, autosaves to localStorage) ----------
+  notesTextarea.value = localStorage.getItem(LS.notes) || "";
+  let notesSaveTimer = null;
+  notesTextarea.addEventListener("input", () => {
+    notesStatus.textContent = "Saving...";
+    clearTimeout(notesSaveTimer);
+    notesSaveTimer = setTimeout(() => {
+      localStorage.setItem(LS.notes, notesTextarea.value);
+      const now = new Date();
+      notesStatus.textContent = "Saved " + now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    }, 400);
+  });
 
   // ---------- Init ----------
   buildZipToggles();
