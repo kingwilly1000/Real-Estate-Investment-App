@@ -579,7 +579,7 @@
           <div class="field">
             <label for="aTaxPct">Property Tax Estimate %</label>
             <input type="number" id="aTaxPct" step="any" min="0" max="1">
-            <span class="field-hint">Indiana caps non-homestead (rental) property tax at 2% of assessed value — this defaults to that cap, using purchase price as a stand-in for assessed value.</span>
+            <span class="field-hint">Indiana caps non-homestead (rental) property tax at 2% of assessed value — this default is set below that cap, using purchase price as a stand-in for assessed value.</span>
           </div>
           <div class="field">
             <label for="aInsurancePct">Insurance Estimate %</label>
@@ -681,7 +681,7 @@
     capexPct: 0.08,
     leasingPct: 0.04,
     appreciationPct: 0.03,
-    taxEstimatePct: 0.02,
+    taxEstimatePct: 0.017,
     insuranceEstimatePct: 0.009,
     minMonthlyCashFlow: 200,
     minCoCReturn: 0.08,
@@ -1212,7 +1212,7 @@
   const pTaxesHint = document.getElementById("pTaxesHint");
   const pInsuranceHint = document.getElementById("pInsuranceHint");
 
-  const TAX_HINT = () => `Auto-estimated at ${fmtPct(assumptions.taxEstimatePct)} of purchase price (Indiana's non-homestead cap) — replace with the actual figure from the Marion County assessor once you have it.`;
+  const TAX_HINT = () => `Auto-estimated at ${fmtPct(assumptions.taxEstimatePct)} of purchase price (Indiana's non-homestead cap is 2%) — replace with the actual figure from the Marion County assessor once you have it.`;
   const INSURANCE_HINT = () => `Auto-estimated at ${fmtPct(assumptions.insuranceEstimatePct)} of purchase price (rough rule of thumb) — replace with a real landlord policy quote.`;
 
   // Whether the CURRENT value in each field was set by us (vs typed by the
