@@ -299,7 +299,8 @@
     <h1>Indianapolis Property Feed</h1>
     <p>Track properties you're researching &middot; full underwriting auto-calculated</p>
     <div class="top-tabs" id="topTabs">
-      <button class="top-tab active" data-tab="properties">Properties</button>
+      <button class="top-tab active" data-tab="properties">Indianapolis</button>
+      <button class="top-tab" data-tab="florida">Florida</button>
       <button class="top-tab" data-tab="notes">Notes</button>
     </div>
     <div class="action-bar" id="propertiesActionBar">
@@ -363,6 +364,60 @@
     <div class="empty-state">
       No properties tracked yet.
       <br><button class="primary" id="emptyAddBtn">+ Add your first property</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="container" id="floridaView" style="display:none;">
+
+  <div class="stats-bar">
+    <div class="stat"><div class="num" id="flStatTotal">0</div><div class="label">Tracked</div></div>
+    <div class="stat"><div class="num" id="flStatStrong">0</div><div class="label">Strong Buys</div></div>
+    <div class="stat"><div class="num" id="flStatAvgCF">$0</div><div class="label">Avg Cash Flow</div></div>
+    <div class="stat"><div class="num" id="flStatAvgCoC">0%</div><div class="label">Avg CoC Return</div></div>
+    <div class="stat"><div class="num" id="flStatSaved">0</div><div class="label">Saved</div></div>
+  </div>
+
+  <div class="controls">
+    <div class="control-group">
+      <div class="gl">Filter</div>
+      <div class="btn-row" id="flFilterRow">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="strong">Strong Buy</button>
+        <button class="filter-btn" data-filter="worth">Worth a Look</button>
+        <button class="filter-btn" data-filter="saved">Saved</button>
+        <button class="filter-btn" data-filter="new">Added Today</button>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="gl">Sort</div>
+      <select id="flSortSelect">
+        <option value="newest" selected>Newest Added</option>
+        <option value="score">Tests Passed</option>
+        <option value="cashflow">Cash Flow (high to low)</option>
+        <option value="coc">Cash-on-Cash (high to low)</option>
+        <option value="price_asc">Price (low to high)</option>
+        <option value="price_desc">Price (high to low)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="control-group" style="margin-top:14px;" id="flZipSection">
+    <div class="zip-head">
+      <div class="gl">ZIP Codes</div>
+      <div class="zip-quick">
+        <button id="flZipAllBtn">All</button>
+        <button id="flZipNoneBtn">None</button>
+      </div>
+    </div>
+    <div class="zip-toggles" id="flZipToggles"></div>
+  </div>
+
+  <div id="flContent">
+    <div class="empty-state">
+      No Florida properties tracked yet.
+      <br><button class="primary" id="flEmptyAddBtn">+ Add your first Florida property</button>
     </div>
   </div>
 
@@ -432,9 +487,13 @@
             <label for="pCity">City</label>
             <input type="text" id="pCity" value="Indianapolis">
           </div>
-          <div class="field">
+          <div class="field" id="pZipIndyWrap">
             <label for="pZip">ZIP*</label>
             <select id="pZip" required></select>
+          </div>
+          <div class="field" id="pZipFlWrap" style="display:none;">
+            <label for="pZipFl">ZIP*</label>
+            <input type="text" id="pZipFl" inputmode="numeric" placeholder="33101">
           </div>
           <div class="field">
             <label for="pNeighborhood">Neighborhood</label>
@@ -545,8 +604,8 @@
   <div class="modal">
     <div class="modal-head">
       <div>
-        <h2>Assumptions</h2>
-        <p class="modal-sub">Change these once — every tracked property recalculates.</p>
+        <h2 id="assumptionsTitle">Assumptions</h2>
+        <p class="modal-sub">Change these once — every tracked property in this market recalculates.</p>
       </div>
       <button id="assumptionsCloseBtn">&times;</button>
     </div>
@@ -712,20 +771,70 @@
     { key: "insuranceEstimatePct", label: "Insurance Estimate %",     group: "Operating", fmt: "pct" },
   ];
 
+  // Florida has no curated zip/neighborhood-grade list (unlike the 8 target
+  // Indianapolis zips above) and a meaningfully different cost structure —
+  // no comparable tax cap, and insurance runs dramatically higher and far
+  // more location-dependent (flood zone, hurricane exposure, roof age) than
+  // the Midwest. These starting numbers are rough, generic placeholders,
+  // NOT researched Florida figures — treat insurance especially as a
+  // must-replace-with-a-real-quote value, more so than anything else in
+  // this app.
+  const DEFAULT_FL_ASSUMPTIONS = Object.assign({}, {
+    downPaymentPct: 0.25,
+    interestRate: 0.0725,
+    loanTermYears: 30,
+    closingCostsPct: 0.03,
+    reservesAtClose: 5000,
+    vacancyPct: 0.08,
+    pmPct: 0.09,
+    maintenancePct: 0.08,
+    capexPct: 0.08,
+    leasingPct: 0.04,
+    appreciationPct: 0.03,
+    taxEstimatePct: 0.010,
+    insuranceEstimatePct: 0.020,
+    minMonthlyCashFlow: 200,
+    minCoCReturn: 0.08,
+    minCapRate: 0.07,
+    minDSCR: 1.25,
+    min1PctRule: 0.009,
+    maxAllInCost: 300000,
+  });
+
+  // Per-market config driving which properties/state/zip-UI a tab uses.
+  const MARKETS = {
+    indy: { label: "Indianapolis", stateCode: "IN", defaultCity: "Indianapolis", curatedZips: true },
+    fl:   { label: "Florida",      stateCode: "FL", defaultCity: "",             curatedZips: false },
+  };
+
   const LS = {
     properties: "iuw_properties",
     assumptions: "iuw_assumptions",
     hiddenZips: "iuw_hiddenZips",
+    flAssumptions: "iuw_fl_assumptions",
+    flHiddenZips: "iuw_fl_hiddenZips",
     notes: "iuw_notes",
   };
 
   // ---------- State ----------
+  // A single properties array holds both markets — each property carries a
+  // .market field ("indy" | "fl"); older saved properties predate this
+  // field and default to "indy" wherever it's read (see propertyMarket()).
   let properties = loadProperties();
   let assumptions = loadAssumptions();
+  let floridaAssumptions = loadFloridaAssumptions();
   let hiddenZips = loadSet(LS.hiddenZips);
+  let flHiddenZips = loadSet(LS.flHiddenZips);
   let currentFilter = "all";
   let currentSort = "newest";
+  let flCurrentFilter = "all";
+  let flCurrentSort = "newest";
   let editingId = null;
+  let activeTab = "properties"; // "properties" (indy) | "florida" | "notes"
+
+  function propertyMarket(p){ return p && p.market === "fl" ? "fl" : "indy"; }
+  function assumptionsForMarket(market){ return market === "fl" ? floridaAssumptions : assumptions; }
+  function tabMarket(tab){ return tab === "florida" ? "fl" : "indy"; }
 
   function loadSet(key){
     try { return new Set(JSON.parse(localStorage.getItem(key) || "[]")); }
@@ -733,7 +842,7 @@
   }
   function saveSet(key, set){
     localStorage.setItem(key, JSON.stringify(Array.from(set)));
-    if (key === LS.hiddenZips) schedulePushToCloud();
+    if (key === LS.hiddenZips || key === LS.flHiddenZips) schedulePushToCloud();
   }
   function loadProperties(){
     try { return JSON.parse(localStorage.getItem(LS.properties) || "[]"); }
@@ -751,6 +860,16 @@
   }
   function saveAssumptions(){
     localStorage.setItem(LS.assumptions, JSON.stringify(assumptions));
+    schedulePushToCloud();
+  }
+  function loadFloridaAssumptions(){
+    try {
+      const stored = JSON.parse(localStorage.getItem(LS.flAssumptions) || "null");
+      return stored ? Object.assign({}, DEFAULT_FL_ASSUMPTIONS, stored) : Object.assign({}, DEFAULT_FL_ASSUMPTIONS);
+    } catch(e){ return Object.assign({}, DEFAULT_FL_ASSUMPTIONS); }
+  }
+  function saveFloridaAssumptions(){
+    localStorage.setItem(LS.flAssumptions, JSON.stringify(floridaAssumptions));
     schedulePushToCloud();
   }
 
@@ -899,6 +1018,42 @@
   const emptyAddBtn = document.getElementById("emptyAddBtn");
   const assumptionsBtn = document.getElementById("assumptionsBtn");
 
+  const flContent = document.getElementById("flContent");
+  const flZipTogglesEl = document.getElementById("flZipToggles");
+  const flZipSection = document.getElementById("flZipSection");
+  const flSortSelect = document.getElementById("flSortSelect");
+  const flEmptyAddBtn = document.getElementById("flEmptyAddBtn");
+
+  // Per-tab context: which DOM elements, market, and filter/sort/hiddenZips
+  // state a given properties tab ("properties" = Indianapolis, or
+  // "florida") reads and writes. Every render/filter/sort/zip function
+  // below takes a tab key and looks its context up here, rather than having
+  // two near-duplicate copies of each function.
+  function tabCtx(tab){
+    if (tab === "florida") {
+      return {
+        market: "fl", content: flContent, zipTogglesEl: flZipTogglesEl, zipSection: flZipSection,
+        sortSelect: flSortSelect,
+        getFilter: () => flCurrentFilter, setFilter: (v) => { flCurrentFilter = v; },
+        getSort: () => flCurrentSort, setSort: (v) => { flCurrentSort = v; },
+        getHiddenZips: () => flHiddenZips, setHiddenZips: (s) => { flHiddenZips = s; },
+        hiddenZipsKey: LS.flHiddenZips,
+        statTotal: "flStatTotal", statStrong: "flStatStrong", statAvgCF: "flStatAvgCF", statAvgCoC: "flStatAvgCoC", statSaved: "flStatSaved",
+        filterRowId: "flFilterRow", emptyAddBtn: flEmptyAddBtn,
+      };
+    }
+    return {
+      market: "indy", content: content, zipTogglesEl: zipTogglesEl, zipSection: zipSection,
+      sortSelect: sortSelect,
+      getFilter: () => currentFilter, setFilter: (v) => { currentFilter = v; },
+      getSort: () => currentSort, setSort: (v) => { currentSort = v; },
+      getHiddenZips: () => hiddenZips, setHiddenZips: (s) => { hiddenZips = s; },
+      hiddenZipsKey: LS.hiddenZips,
+      statTotal: "statTotal", statStrong: "statStrong", statAvgCF: "statAvgCF", statAvgCoC: "statAvgCoC", statSaved: "statSaved",
+      filterRowId: "filterRow", emptyAddBtn: emptyAddBtn,
+    };
+  }
+
   const propModalOverlay = document.getElementById("propModalOverlay");
   const propModalTitle = document.getElementById("propModalTitle");
   const propModalCloseBtn = document.getElementById("propModalCloseBtn");
@@ -935,10 +1090,11 @@
   const signInBtn = document.getElementById("signInBtn");
   const syncStatusText = document.getElementById("syncStatusText");
 
-  // ---------- Top tabs (Properties / Notes) ----------
+  // ---------- Top tabs (Indianapolis / Florida / Notes) ----------
   const topTabs = document.getElementById("topTabs");
   const propertiesView = document.getElementById("propertiesView");
   const propertiesActionBar = document.getElementById("propertiesActionBar");
+  const floridaView = document.getElementById("floridaView");
   const notesView = document.getElementById("notesView");
   const notesTextarea = document.getElementById("notesTextarea");
   const notesStatus = document.getElementById("notesStatus");
@@ -948,11 +1104,12 @@
     if (!btn) return;
     document.querySelectorAll(".top-tab").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
-    const showNotes = btn.dataset.tab === "notes";
-    propertiesView.style.display = showNotes ? "none" : "block";
-    propertiesActionBar.style.display = showNotes ? "none" : "flex";
-    notesView.style.display = showNotes ? "block" : "none";
-    if (showNotes) notesTextarea.focus();
+    activeTab = btn.dataset.tab; // "properties" | "florida" | "notes"
+    propertiesView.style.display = activeTab === "properties" ? "block" : "none";
+    floridaView.style.display = activeTab === "florida" ? "block" : "none";
+    notesView.style.display = activeTab === "notes" ? "block" : "none";
+    propertiesActionBar.style.display = activeTab === "notes" ? "none" : "flex";
+    if (activeTab === "notes") notesTextarea.focus();
   });
 
   // ---------- Notes (free-form scratchpad, autosaves to localStorage) ----------
@@ -1020,7 +1177,11 @@
   }
 
   function buildCloudState(){
-    return { properties, assumptions, hiddenZips: Array.from(hiddenZips), notes: notesTextarea.value };
+    return {
+      properties, assumptions, hiddenZips: Array.from(hiddenZips),
+      floridaAssumptions, flHiddenZips: Array.from(flHiddenZips),
+      notes: notesTextarea.value,
+    };
   }
 
   function schedulePushToCloud(){
@@ -1048,14 +1209,20 @@
     properties = data.properties || [];
     assumptions = Object.assign({}, DEFAULT_ASSUMPTIONS, data.assumptions || {});
     hiddenZips = new Set(data.hiddenZips || []);
+    floridaAssumptions = Object.assign({}, DEFAULT_FL_ASSUMPTIONS, data.floridaAssumptions || {});
+    flHiddenZips = new Set(data.flHiddenZips || []);
     localStorage.setItem(LS.properties, JSON.stringify(properties));
     localStorage.setItem(LS.assumptions, JSON.stringify(assumptions));
     localStorage.setItem(LS.hiddenZips, JSON.stringify(Array.from(hiddenZips)));
+    localStorage.setItem(LS.flAssumptions, JSON.stringify(floridaAssumptions));
+    localStorage.setItem(LS.flHiddenZips, JSON.stringify(Array.from(flHiddenZips)));
     notesTextarea.value = data.notes || "";
     localStorage.setItem(LS.notes, notesTextarea.value);
     lastSyncedSnapshot = JSON.stringify(buildCloudState());
-    buildZipToggles();
-    render();
+    buildZipToggles("properties");
+    buildZipToggles("florida");
+    render("properties");
+    render("florida");
   }
 
   function attachCloudListener(user){
@@ -1131,58 +1298,78 @@
   initFirebase();
 
   // ---------- Init ----------
-  buildZipToggles();
-  render();
+  buildZipToggles("properties");
+  buildZipToggles("florida");
+  render("properties");
+  render("florida");
 
   // ---------- Zip toggles (only zips actually in use, so this stays out of the way when empty) ----------
-  function zipsInUse(){
-    const set = new Set(properties.map(p => p.zip).filter(Boolean));
-    ZIPS.forEach(z => set.add(z.zip)); // always show the 8 target zips as quick filters
+  // Indianapolis always shows its 8 curated target zips as quick filters
+  // even before any property uses them; Florida has no curated list, so it
+  // only ever shows zips that at least one tracked Florida property uses.
+  function zipsInUse(tab){
+    const market = tabMarket(tab);
+    const set = new Set(properties.filter(p => propertyMarket(p) === market).map(p => p.zip).filter(Boolean));
+    if (market === "indy") ZIPS.forEach(z => set.add(z.zip));
     return Array.from(set);
   }
-  function buildZipToggles(){
-    zipTogglesEl.innerHTML = "";
-    const zips = zipsInUse();
-    zipSection.style.display = zips.length ? "flex" : "none";
+  function buildZipToggles(tab){
+    const ctx = tabCtx(tab);
+    ctx.zipTogglesEl.innerHTML = "";
+    const zips = zipsInUse(tab);
+    ctx.zipSection.style.display = zips.length ? "flex" : "none";
+    const hz = ctx.getHiddenZips();
     zips.forEach(zip => {
-      const meta = ZIP_MAP[zip];
+      const meta = ctx.market === "indy" ? ZIP_MAP[zip] : null;
       const btn = document.createElement("button");
-      btn.className = "zip-toggle" + (hiddenZips.has(zip) ? "" : " active");
-      btn.innerHTML = `${zip}<span class="zip-name"> &middot; ${meta ? meta.name : "Other"}</span>${meta ? ` <span class="grade">(${meta.grade})</span>` : ""}`;
+      btn.className = "zip-toggle" + (hz.has(zip) ? "" : " active");
+      btn.innerHTML = `${zip}${meta ? `<span class="zip-name"> &middot; ${meta.name}</span> <span class="grade">(${meta.grade})</span>` : ""}`;
       btn.title = meta ? `${zip} — ${meta.name} (Grade ${meta.grade})` : zip;
       btn.addEventListener("click", () => {
-        if (hiddenZips.has(zip)) hiddenZips.delete(zip);
-        else hiddenZips.add(zip);
-        saveSet(LS.hiddenZips, hiddenZips);
+        const set = ctx.getHiddenZips();
+        if (set.has(zip)) set.delete(zip); else set.add(zip);
+        saveSet(ctx.hiddenZipsKey, set);
         btn.classList.toggle("active");
-        render();
+        render(tab);
       });
-      zipTogglesEl.appendChild(btn);
+      ctx.zipTogglesEl.appendChild(btn);
     });
   }
-  document.getElementById("zipAllBtn").addEventListener("click", () => {
-    hiddenZips = new Set();
-    saveSet(LS.hiddenZips, hiddenZips);
-    buildZipToggles();
-    render();
-  });
-  document.getElementById("zipNoneBtn").addEventListener("click", () => {
-    hiddenZips = new Set(zipsInUse());
-    saveSet(LS.hiddenZips, hiddenZips);
-    buildZipToggles();
-    render();
-  });
+  function wireZipQuickButtons(tab, allBtnId, noneBtnId){
+    const ctx = tabCtx(tab);
+    document.getElementById(allBtnId).addEventListener("click", () => {
+      ctx.setHiddenZips(new Set());
+      saveSet(ctx.hiddenZipsKey, ctx.getHiddenZips());
+      buildZipToggles(tab);
+      render(tab);
+    });
+    document.getElementById(noneBtnId).addEventListener("click", () => {
+      ctx.setHiddenZips(new Set(zipsInUse(tab)));
+      saveSet(ctx.hiddenZipsKey, ctx.getHiddenZips());
+      buildZipToggles(tab);
+      render(tab);
+    });
+  }
+  wireZipQuickButtons("properties", "zipAllBtn", "zipNoneBtn");
+  wireZipQuickButtons("florida", "flZipAllBtn", "flZipNoneBtn");
 
   // ---------- Filters / sort ----------
-  sortSelect.addEventListener("change", () => { currentSort = sortSelect.value; render(); });
-  document.getElementById("filterRow").addEventListener("click", (e) => {
-    const btn = e.target.closest(".filter-btn");
-    if (!btn) return;
-    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    currentFilter = btn.dataset.filter;
-    render();
-  });
+  function wireFilterAndSort(tab){
+    const ctx = tabCtx(tab);
+    ctx.sortSelect.addEventListener("change", () => { ctx.setSort(ctx.sortSelect.value); render(tab); });
+    document.getElementById(ctx.filterRowId).addEventListener("click", (e) => {
+      const btn = e.target.closest(".filter-btn");
+      if (!btn) return;
+      // Scoped to this tab's own filter row — the two tabs' buttons share a
+      // class name but must not affect each other's active state.
+      e.currentTarget.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      ctx.setFilter(btn.dataset.filter);
+      render(tab);
+    });
+  }
+  wireFilterAndSort("properties");
+  wireFilterAndSort("florida");
 
   // ---------- Property ZIP select (shared by form) ----------
   const pZipSelect = document.getElementById("pZip");
@@ -1212,8 +1399,12 @@
   const pTaxesHint = document.getElementById("pTaxesHint");
   const pInsuranceHint = document.getElementById("pInsuranceHint");
 
-  const TAX_HINT = () => `Auto-estimated at ${fmtPct(assumptions.taxEstimatePct)} of purchase price (Indiana's non-homestead cap is 2%) — replace with the actual figure from the Marion County assessor once you have it.`;
-  const INSURANCE_HINT = () => `Auto-estimated at ${fmtPct(assumptions.insuranceEstimatePct)} of purchase price (rough rule of thumb) — replace with a real landlord policy quote.`;
+  const TAX_HINT = () => modalMarket === "fl"
+    ? `Auto-estimated at ${fmtPct(assumptionsForMarket("fl").taxEstimatePct)} of purchase price — a rough placeholder, not a researched Florida figure. Replace with the actual figure once you have it (rates vary a lot by county).`
+    : `Auto-estimated at ${fmtPct(assumptionsForMarket("indy").taxEstimatePct)} of purchase price (Indiana's non-homestead cap is 2%) — replace with the actual figure from the Marion County assessor once you have it.`;
+  const INSURANCE_HINT = () => modalMarket === "fl"
+    ? `Auto-estimated at ${fmtPct(assumptionsForMarket("fl").insuranceEstimatePct)} of purchase price — Florida insurance is extremely location-dependent (flood zone, hurricane exposure, roof age). Get a real quote early; this placeholder could be far off.`
+    : `Auto-estimated at ${fmtPct(assumptionsForMarket("indy").insuranceEstimatePct)} of purchase price (rough rule of thumb) — replace with a real landlord policy quote.`;
 
   // Whether the CURRENT value in each field was set by us (vs typed by the
   // user) — tracked explicitly rather than inferred from "is it empty",
@@ -1227,13 +1418,14 @@
   function autoEstimateTaxAndInsurance(){
     const price = Number(pPurchasePriceEl.value) || 0;
     if (price <= 0) return;
+    const a = assumptionsForMarket(modalMarket);
     if (!pTaxesEl.value || taxAutoFilled) {
-      pTaxesEl.value = Math.round(price * assumptions.taxEstimatePct);
+      pTaxesEl.value = Math.round(price * a.taxEstimatePct);
       taxAutoFilled = true;
       pTaxesHint.textContent = TAX_HINT();
     }
     if (!pInsuranceEl.value || insuranceAutoFilled) {
-      pInsuranceEl.value = Math.round(price * assumptions.insuranceEstimatePct);
+      pInsuranceEl.value = Math.round(price * a.insuranceEstimatePct);
       insuranceAutoFilled = true;
       pInsuranceHint.textContent = INSURANCE_HINT();
     }
@@ -1260,9 +1452,18 @@
   });
 
   // ---------- Add / Edit Property modal ----------
-  function openPropModal(property){
+  let modalMarket = "indy"; // which market the currently-open Add/Edit modal saves into
+
+  function setModalZipMode(market){
+    document.getElementById("pZipIndyWrap").style.display = market === "indy" ? "block" : "none";
+    document.getElementById("pZipFlWrap").style.display = market === "fl" ? "block" : "none";
+  }
+
+  function openPropModal(property, tab){
+    modalMarket = property ? propertyMarket(property) : tabMarket(tab);
+    setModalZipMode(modalMarket);
     editingId = property ? property.id : null;
-    propModalTitle.textContent = property ? "Edit Property" : "Add Property";
+    propModalTitle.textContent = property ? "Edit Property" : `Add ${MARKETS[modalMarket].label} Property`;
     propSaveBtn.textContent = property ? "Save Changes" : "Save Property";
     propFormError.classList.remove("show");
     smartPasteInput.value = "";
@@ -1272,8 +1473,9 @@
     const f = (id) => document.getElementById(id);
     if (property) {
       f("pAddr").value = property.address || "";
-      f("pCity").value = property.city || "Indianapolis";
-      pZipSelect.value = property.zip || "";
+      f("pCity").value = property.city || MARKETS[modalMarket].defaultCity;
+      if (modalMarket === "indy") pZipSelect.value = property.zip || "";
+      else f("pZipFl").value = property.zip || "";
       f("pNeighborhood").value = property.neighborhood || "";
       f("pBeds").value = property.beds || "";
       f("pBaths").value = property.baths || "";
@@ -1303,7 +1505,7 @@
       if (hasAdvanced) { advancedFields.classList.add("show"); advancedToggleBtn.textContent = "- Hide other expenses"; }
     } else {
       propForm.reset();
-      f("pCity").value = "Indianapolis";
+      f("pCity").value = MARKETS[modalMarket].defaultCity;
       advancedFields.classList.remove("show");
       advancedToggleBtn.textContent = "+ Show other expenses (HOA, other income, etc.)";
     }
@@ -1320,8 +1522,11 @@
     propModalOverlay.classList.remove("show");
     editingId = null;
   }
-  addPropertyBtn.addEventListener("click", () => openPropModal(null));
-  emptyAddBtn.addEventListener("click", () => openPropModal(null));
+  // Shared header button — which market it adds to follows whichever tab
+  // (Indianapolis or Florida) is currently active. The empty-state's own
+  // "+ Add your first property" button is rebuilt fresh by render() every
+  // time (tab-scoped id), so it doesn't need a handler wired here.
+  addPropertyBtn.addEventListener("click", () => openPropModal(null, activeTab));
   propModalCloseBtn.addEventListener("click", closePropModal);
   propCancelBtn.addEventListener("click", closePropModal);
   propModalOverlay.addEventListener("click", (e) => { if (e.target === propModalOverlay) closePropModal(); });
@@ -1336,8 +1541,9 @@
     e.preventDefault();
     propFormError.classList.remove("show");
     const f = (id) => document.getElementById(id).value;
+    const tab = modalMarket === "fl" ? "florida" : "properties";
 
-    const zipTyped = (pZipSelect.value || "").trim();
+    const zipTyped = (modalMarket === "indy" ? pZipSelect.value : f("pZipFl")).trim();
     const addr = f("pAddr").trim();
     const purchasePrice = Number(f("pPurchasePrice"));
     const rent = Number(f("pRent"));
@@ -1349,10 +1555,11 @@
     }
 
     const data = {
+      market: modalMarket,
       address: addr,
-      city: f("pCity").trim() || "Indianapolis",
+      city: f("pCity").trim() || MARKETS[modalMarket].defaultCity,
       zip: zipTyped,
-      neighborhood: f("pNeighborhood").trim() || (ZIP_MAP[zipTyped] ? ZIP_MAP[zipTyped].name : ""),
+      neighborhood: f("pNeighborhood").trim() || (modalMarket === "indy" && ZIP_MAP[zipTyped] ? ZIP_MAP[zipTyped].name : ""),
       beds: Number(f("pBeds")) || 0,
       baths: Number(f("pBaths")) || 0,
       sqft: Number(f("pSqft")) || 0,
@@ -1374,21 +1581,23 @@
 
     if (editingId) {
       const idx = properties.findIndex(p => p.id === editingId);
-      if (idx !== -1) properties[idx] = Object.assign({}, properties[idx], data);
+      // market is intentionally not overwritten on edit — a property never
+      // moves markets after creation.
+      if (idx !== -1) properties[idx] = Object.assign({}, properties[idx], data, { market: propertyMarket(properties[idx]) });
     } else {
       properties.push(Object.assign({ id: "prop-" + Date.now() + "-" + Math.floor(Math.random() * 1e6), createdAt: Date.now(), saved: false }, data));
     }
     saveProperties();
-    buildZipToggles();
-    render();
+    buildZipToggles(tab);
+    render(tab);
     closePropModal();
   });
 
-  function deleteProperty(id){
+  function deleteProperty(id, tab){
     properties = properties.filter(p => p.id !== id);
     saveProperties();
-    buildZipToggles();
-    render();
+    buildZipToggles(tab);
+    render(tab);
   }
 
   // ---------- Smart Paste ----------
@@ -1424,7 +1633,15 @@
 
     if (parsed.addrLine) f("pAddr").value = parsed.addrLine;
     if (parsed.city) f("pCity").value = parsed.city;
-    if (parsed.postalCode) { pZipSelect.value = parsed.postalCode; const meta = ZIP_MAP[parsed.postalCode]; if (meta) f("pNeighborhood").value = meta.name; }
+    if (parsed.postalCode) {
+      if (modalMarket === "indy") {
+        pZipSelect.value = parsed.postalCode;
+        const meta = ZIP_MAP[parsed.postalCode];
+        if (meta) f("pNeighborhood").value = meta.name;
+      } else {
+        f("pZipFl").value = parsed.postalCode;
+      }
+    }
     if (parsed.price) {
       f("pListPrice").value = parsed.price;
       if (!f("pPurchasePrice").value) f("pPurchasePrice").value = parsed.price;
@@ -1573,44 +1790,50 @@
   });
 
   // ---------- Assumptions modal ----------
-  function openAssumptionsModal(){
+  let assumptionsModalMarket = "indy";
+
+  function openAssumptionsModal(market){
+    assumptionsModalMarket = market || "indy";
+    const a = assumptionsForMarket(assumptionsModalMarket);
+    document.getElementById("assumptionsTitle").textContent = `${MARKETS[assumptionsModalMarket].label} Assumptions`;
     const f = (id) => document.getElementById(id);
-    f("aDownPct").value = assumptions.downPaymentPct;
-    f("aRate").value = assumptions.interestRate;
-    f("aTerm").value = assumptions.loanTermYears;
-    f("aClosingPct").value = assumptions.closingCostsPct;
-    f("aReserves").value = assumptions.reservesAtClose;
-    f("aVacancy").value = assumptions.vacancyPct;
-    f("aPm").value = assumptions.pmPct;
-    f("aMaint").value = assumptions.maintenancePct;
-    f("aCapex").value = assumptions.capexPct;
-    f("aLeasing").value = assumptions.leasingPct;
-    f("aAppreciation").value = assumptions.appreciationPct;
-    f("aTaxPct").value = assumptions.taxEstimatePct;
-    f("aInsurancePct").value = assumptions.insuranceEstimatePct;
-    f("aMinCF").value = assumptions.minMonthlyCashFlow;
-    f("aMinCoC").value = assumptions.minCoCReturn;
-    f("aMinCap").value = assumptions.minCapRate;
-    f("aMinDscr").value = assumptions.minDSCR;
-    f("aMin1pct").value = assumptions.min1PctRule;
-    f("aMaxAllIn").value = assumptions.maxAllInCost;
+    f("aDownPct").value = a.downPaymentPct;
+    f("aRate").value = a.interestRate;
+    f("aTerm").value = a.loanTermYears;
+    f("aClosingPct").value = a.closingCostsPct;
+    f("aReserves").value = a.reservesAtClose;
+    f("aVacancy").value = a.vacancyPct;
+    f("aPm").value = a.pmPct;
+    f("aMaint").value = a.maintenancePct;
+    f("aCapex").value = a.capexPct;
+    f("aLeasing").value = a.leasingPct;
+    f("aAppreciation").value = a.appreciationPct;
+    f("aTaxPct").value = a.taxEstimatePct;
+    f("aInsurancePct").value = a.insuranceEstimatePct;
+    f("aMinCF").value = a.minMonthlyCashFlow;
+    f("aMinCoC").value = a.minCoCReturn;
+    f("aMinCap").value = a.minCapRate;
+    f("aMinDscr").value = a.minDSCR;
+    f("aMin1pct").value = a.min1PctRule;
+    f("aMaxAllIn").value = a.maxAllInCost;
     assumptionsModalOverlay.classList.add("show");
   }
   function closeAssumptionsModal(){ assumptionsModalOverlay.classList.remove("show"); }
-  assumptionsBtn.addEventListener("click", openAssumptionsModal);
+  assumptionsBtn.addEventListener("click", () => openAssumptionsModal(tabMarket(activeTab)));
   assumptionsCloseBtn.addEventListener("click", closeAssumptionsModal);
   assumptionsModalOverlay.addEventListener("click", (e) => { if (e.target === assumptionsModalOverlay) closeAssumptionsModal(); });
   assumptionsResetBtn.addEventListener("click", () => {
-    assumptions = Object.assign({}, DEFAULT_ASSUMPTIONS);
-    saveAssumptions();
-    openAssumptionsModal();
-    render();
-    showBanner("info", "Assumptions reset to defaults.");
+    const tab = assumptionsModalMarket === "fl" ? "florida" : "properties";
+    if (assumptionsModalMarket === "fl") { floridaAssumptions = Object.assign({}, DEFAULT_FL_ASSUMPTIONS); saveFloridaAssumptions(); }
+    else { assumptions = Object.assign({}, DEFAULT_ASSUMPTIONS); saveAssumptions(); }
+    openAssumptionsModal(assumptionsModalMarket);
+    render(tab);
+    showBanner("info", `${MARKETS[assumptionsModalMarket].label} assumptions reset to defaults.`);
   });
   assumptionsForm.addEventListener("submit", (e) => {
     e.preventDefault();
     const f = (id) => Number(document.getElementById(id).value);
-    assumptions = {
+    const updated = {
       downPaymentPct: f("aDownPct"), interestRate: f("aRate"), loanTermYears: f("aTerm"),
       closingCostsPct: f("aClosingPct"), reservesAtClose: f("aReserves"),
       vacancyPct: f("aVacancy"), pmPct: f("aPm"), maintenancePct: f("aMaint"),
@@ -1619,10 +1842,12 @@
       minMonthlyCashFlow: f("aMinCF"), minCoCReturn: f("aMinCoC"), minCapRate: f("aMinCap"),
       minDSCR: f("aMinDscr"), min1PctRule: f("aMin1pct"), maxAllInCost: f("aMaxAllIn"),
     };
-    saveAssumptions();
-    render();
+    const tab = assumptionsModalMarket === "fl" ? "florida" : "properties";
+    if (assumptionsModalMarket === "fl") { floridaAssumptions = updated; saveFloridaAssumptions(); }
+    else { assumptions = updated; saveAssumptions(); }
+    render(tab);
     closeAssumptionsModal();
-    showBanner("info", "Assumptions saved — every property recalculated.");
+    showBanner("info", `${MARKETS[assumptionsModalMarket].label} assumptions saved — every property in that market recalculated.`);
   });
 
   // ---------- Property Assumptions modal (per-property overrides) ----------
@@ -1651,10 +1876,11 @@
   function openPropAssumptionsModal(property){
     propAssumptionsTargetId = property.id;
     propAssumptionsTitle.textContent = "Assumptions for " + property.address;
+    const base = assumptionsForMarket(propertyMarket(property));
     const overrides = property.assumptionOverrides || {};
     OVERRIDABLE_FIELDS.forEach(field => {
       const input = document.getElementById(fieldInputId(field.key));
-      input.placeholder = String(assumptions[field.key]);
+      input.placeholder = String(base[field.key]);
       input.value = (overrides[field.key] !== undefined && overrides[field.key] !== null) ? overrides[field.key] : "";
     });
     propAssumptionsModalOverlay.classList.add("show");
@@ -1677,7 +1903,7 @@
     });
     p.assumptionOverrides = overrides;
     saveProperties();
-    render();
+    render(propertyMarket(p) === "fl" ? "florida" : "properties");
     closePropAssumptionsModal();
     const openId = detailsModalOverlay.classList.contains("show") ? p.id : null;
     if (openId) openDetailsModal(p); // refresh the numbers underneath if Details is still open
@@ -1692,22 +1918,25 @@
     if (p) {
       p.assumptionOverrides = {};
       saveProperties();
-      render();
+      render(propertyMarket(p) === "fl" ? "florida" : "properties");
     }
   });
 
   // ---------- Details modal ----------
   function openDetailsModal(property){
-    const d = computeDeal(property, assumptions);
+    const propMarket = propertyMarket(property);
+    const marketAssumptions = assumptionsForMarket(propMarket);
+    const stateCode = MARKETS[propMarket].stateCode;
+    const d = computeDeal(property, marketAssumptions);
     detailsTitle.textContent = property.address;
-    detailsSub.textContent = `${property.city}, IN ${property.zip}${property.neighborhood ? " — " + property.neighborhood : ""}`;
+    detailsSub.textContent = `${property.city}, ${stateCode} ${property.zip}${property.neighborhood ? " — " + property.neighborhood : ""}`;
 
     function row(label, value, cls){ return `<div class="detail-row"><span class="lbl">${label}</span><span class="val ${cls||''}">${value}</span></div>`; }
     function section(title){ return `<div class="form-section"><div class="sec-title">${title}</div>`; }
 
     const purchasePrice = Number(property.purchasePrice) || 0;
     const hasOverride = property.downPaymentOverride !== null && property.downPaymentOverride !== undefined && property.downPaymentOverride >= 0;
-    const currentDownDollar = hasOverride ? Number(property.downPaymentOverride) : Math.round(purchasePrice * assumptions.downPaymentPct);
+    const currentDownDollar = hasOverride ? Number(property.downPaymentOverride) : Math.round(purchasePrice * marketAssumptions.downPaymentPct);
     const currentDownPct = purchasePrice > 0 ? Math.round((currentDownDollar / purchasePrice) * 100) : 0;
 
     let html = "";
@@ -1813,7 +2042,7 @@
     html += "</div>";
 
     detailsBody.innerHTML = html;
-    wireWhatIfPanel(property, purchasePrice);
+    wireWhatIfPanel(property, purchasePrice, marketAssumptions);
     document.getElementById("editPropAssumptionsBtn").addEventListener("click", () => openPropAssumptionsModal(property));
     detailsModalOverlay.classList.add("show");
   }
@@ -1823,7 +2052,7 @@
   // Live what-if recompute — drag the slider or type a $ amount and every
   // return metric updates instantly, without touching the saved property
   // until "Save for This Property" is clicked.
-  function wireWhatIfPanel(property, purchasePrice){
+  function wireWhatIfPanel(property, purchasePrice, marketAssumptions){
     const wiDownPct = document.getElementById("wiDownPct");
     const wiDownDollar = document.getElementById("wiDownDollar");
     const wiPctLabel = document.getElementById("wiPctLabel");
@@ -1836,7 +2065,7 @@
 
     function recompute(downDollar){
       const tempProp = Object.assign({}, property, { downPaymentOverride: downDollar });
-      const d = computeDeal(tempProp, assumptions);
+      const d = computeDeal(tempProp, marketAssumptions);
       wiResults.innerHTML =
         metric("Down Payment", fmtMoney(downDollar)) +
         metric("Loan Amount", fmtMoney(d.loanAmount)) +
@@ -1871,7 +2100,7 @@
       if (p) {
         p.downPaymentOverride = dollar;
         saveProperties();
-        render();
+        render(propertyMarket(p) === "fl" ? "florida" : "properties");
       }
       wiStatus.textContent = `Saved — this property now uses a custom down payment of ${fmtMoney(dollar)} instead of the Assumptions default.`;
     });
@@ -1880,9 +2109,9 @@
       if (p) {
         p.downPaymentOverride = null;
         saveProperties();
-        render();
+        render(propertyMarket(p) === "fl" ? "florida" : "properties");
       }
-      const defaultDollar = Math.round(purchasePrice * assumptions.downPaymentPct);
+      const defaultDollar = Math.round(purchasePrice * marketAssumptions.downPaymentPct);
       wiDownDollar.value = defaultDollar;
       wiDownPct.value = purchasePrice > 0 ? Math.round((defaultDollar / purchasePrice) * 100) : 0;
       wiPctLabel.textContent = wiDownPct.value + "%";
@@ -1901,21 +2130,27 @@
     return "score-0";
   }
 
-  function getFiltered(){
+  function getFiltered(tab){
+    const ctx = tabCtx(tab);
+    const filter = ctx.getFilter();
+    const hz = ctx.getHiddenZips();
     const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
     return properties.filter(p => {
-      if (hiddenZips.has(p.zip)) return false;
-      const d = computeDeal(p, assumptions);
-      if (currentFilter === "strong" && d.verdictKey !== "strong") return false;
-      if (currentFilter === "worth" && d.verdictKey !== "worth") return false;
-      if (currentFilter === "saved" && !p.saved) return false;
-      if (currentFilter === "new" && p.createdAt < oneDayAgo) return false;
+      if (propertyMarket(p) !== ctx.market) return false;
+      if (hz.has(p.zip)) return false;
+      const d = computeDeal(p, assumptionsForMarket(ctx.market));
+      if (filter === "strong" && d.verdictKey !== "strong") return false;
+      if (filter === "worth" && d.verdictKey !== "worth") return false;
+      if (filter === "saved" && !p.saved) return false;
+      if (filter === "new" && p.createdAt < oneDayAgo) return false;
       return true;
     });
   }
-  function getSorted(list){
-    const withDeals = list.map(p => ({ p, d: computeDeal(p, assumptions) }));
-    switch (currentSort) {
+  function getSorted(tab, list){
+    const ctx = tabCtx(tab);
+    const a = assumptionsForMarket(ctx.market);
+    const withDeals = list.map(p => ({ p, d: computeDeal(p, a) }));
+    switch (ctx.getSort()) {
       case "cashflow": withDeals.sort((a,b) => b.d.monthlyCashFlow - a.d.monthlyCashFlow); break;
       case "coc": withDeals.sort((a,b) => b.d.cashOnCash - a.d.cashOnCash); break;
       case "price_asc": withDeals.sort((a,b) => a.p.purchasePrice - b.p.purchasePrice); break;
@@ -1927,36 +2162,40 @@
     return withDeals;
   }
 
-  function render(){
-    updateStats();
-    const list = getSorted(getFiltered());
+  function render(tab){
+    const ctx = tabCtx(tab);
+    updateStats(tab);
+    const list = getSorted(tab, getFiltered(tab));
+    const ownCount = properties.filter(p => propertyMarket(p) === ctx.market).length;
+    const marketLabel = MARKETS[ctx.market].label;
 
-    if (properties.length === 0) {
-      content.innerHTML = `<div class="empty-state">No properties tracked yet.<br><button class="primary" id="emptyAddBtn2">+ Add your first property</button></div>`;
-      document.getElementById("emptyAddBtn2").addEventListener("click", () => openPropModal(null));
+    if (ownCount === 0) {
+      ctx.content.innerHTML = `<div class="empty-state">No ${escapeHtml(marketLabel)} properties tracked yet.<br><button class="primary" id="emptyAddBtn2-${tab}">+ Add your first ${escapeHtml(marketLabel)} property</button></div>`;
+      document.getElementById(`emptyAddBtn2-${tab}`).addEventListener("click", () => openPropModal(null, tab));
       return;
     }
     if (list.length === 0) {
-      content.innerHTML = '<div class="empty-state">No properties match the current filters.</div>';
+      ctx.content.innerHTML = '<div class="empty-state">No properties match the current filters.</div>';
       return;
     }
 
-    content.innerHTML = '<div class="grid" id="grid"></div>';
-    const grid = document.getElementById("grid");
+    ctx.content.innerHTML = `<div class="grid" id="grid-${tab}"></div>`;
+    const grid = document.getElementById(`grid-${tab}`);
     const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    const stateCode = MARKETS[ctx.market].stateCode;
 
     list.forEach(({ p, d }) => {
       const card = document.createElement("div");
       card.className = "card " + scoreClass(d.testsPassed);
-      const meta = ZIP_MAP[p.zip];
+      const meta = ctx.market === "indy" ? ZIP_MAP[p.zip] : null;
       const isNew = p.createdAt >= oneDayAgo;
-      const q = encodeURIComponent(`${p.address} ${p.city} IN ${p.zip}`);
+      const q = encodeURIComponent(`${p.address} ${p.city} ${stateCode} ${p.zip}`);
 
       card.innerHTML = `
         ${p.photo ? `<img class="card-photo" src="${p.photo}" alt="">` : ''}
         <div class="card-top">
           <div class="address">${escapeHtml(p.address)}
-            <span class="sub">${escapeHtml(p.city)}, IN ${escapeHtml(p.zip)}${p.neighborhood ? " — " + escapeHtml(p.neighborhood) : ""}</span>
+            <span class="sub">${escapeHtml(p.city)}, ${stateCode} ${escapeHtml(p.zip)}${p.neighborhood ? " — " + escapeHtml(p.neighborhood) : ""}</span>
           </div>
           <div style="text-align:right;">
             <div class="score-pill">${d.testsPassed}/6</div>
@@ -1998,7 +2237,7 @@
     grid.querySelectorAll(".save-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         const p = properties.find(x => x.id === btn.dataset.id);
-        if (p) { p.saved = !p.saved; saveProperties(); render(); }
+        if (p) { p.saved = !p.saved; saveProperties(); render(tab); }
       });
     });
     grid.querySelectorAll(".details-btn").forEach(btn => {
@@ -2010,29 +2249,32 @@
     grid.querySelectorAll(".edit-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         const p = properties.find(x => x.id === btn.dataset.id);
-        if (p) openPropModal(p);
+        if (p) openPropModal(p, tab);
       });
     });
     grid.querySelectorAll(".delete-btn").forEach(btn => {
       btn.addEventListener("click", () => {
-        if (confirm("Remove this property from your tracker?")) deleteProperty(btn.dataset.id);
+        if (confirm("Remove this property from your tracker?")) deleteProperty(btn.dataset.id, tab);
       });
     });
   }
 
-  function updateStats(){
-    const visible = properties.filter(p => !hiddenZips.has(p.zip)).map(p => ({ p, d: computeDeal(p, assumptions) }));
+  function updateStats(tab){
+    const ctx = tabCtx(tab);
+    const hz = ctx.getHiddenZips();
+    const a = assumptionsForMarket(ctx.market);
+    const visible = properties.filter(p => propertyMarket(p) === ctx.market && !hz.has(p.zip)).map(p => ({ p, d: computeDeal(p, a) }));
     const total = visible.length;
     const strong = visible.filter(x => x.d.verdictKey === "strong").length;
     const avgCF = total ? visible.reduce((s,x) => s + x.d.monthlyCashFlow, 0) / total : 0;
     const avgCoC = total ? visible.reduce((s,x) => s + x.d.cashOnCash, 0) / total : 0;
     const saved = visible.filter(x => x.p.saved).length;
 
-    document.getElementById("statTotal").textContent = total;
-    document.getElementById("statStrong").textContent = strong;
-    document.getElementById("statAvgCF").textContent = fmtMoney(avgCF);
-    document.getElementById("statAvgCoC").textContent = fmtPct(avgCoC);
-    document.getElementById("statSaved").textContent = saved;
+    document.getElementById(ctx.statTotal).textContent = total;
+    document.getElementById(ctx.statStrong).textContent = strong;
+    document.getElementById(ctx.statAvgCF).textContent = fmtMoney(avgCF);
+    document.getElementById(ctx.statAvgCoC).textContent = fmtPct(avgCoC);
+    document.getElementById(ctx.statSaved).textContent = saved;
   }
 
   function showBanner(type, msg){
