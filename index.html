@@ -1373,6 +1373,17 @@
 
   // ---------- Property ZIP select (shared by form) ----------
   const pZipSelect = document.getElementById("pZip");
+  // A real <option selected> placeholder — not just "leave the select
+  // alone" — so a fresh/reset form shows nothing chosen instead of
+  // silently defaulting to the first curated zip (46219). That default
+  // was easy to miss and submit as wrong data whenever Smart Paste or OCR
+  // didn't find a zip in the source text.
+  const pZipPlaceholder = document.createElement("option");
+  pZipPlaceholder.value = "";
+  pZipPlaceholder.textContent = "Select ZIP...";
+  pZipPlaceholder.disabled = true;
+  pZipPlaceholder.setAttribute("selected", "selected");
+  pZipSelect.appendChild(pZipPlaceholder);
   ZIPS.forEach(z => {
     const opt = document.createElement("option");
     opt.value = z.zip;
@@ -1601,6 +1612,23 @@
   }
 
   // ---------- Smart Paste ----------
+  // Common street-suffix words — used to anchor the address search on a
+  // recognizable "...Avenue"/"...Street"/etc rather than on line position,
+  // since OCR line breaks land unpredictably (a price/badge can end up on
+  // the same visual line as the address, or the address can wrap across
+  // two lines). Anchoring on the suffix instead of "start of line" is what
+  // stops the regex from mistaking "3 Beds" or "1 Baths" for the address —
+  // neither contains a street-suffix word, so neither can match here.
+  const STREET_SUFFIX_PATTERN = "(?:St(?:reet)?|Ave(?:nue)?|Dr(?:ive)?|Rd|Road|Ln|Lane|Ct|Court|Blvd|Boulevard|Way|Pl(?:ace)?|Cir(?:cle)?|Ter(?:race)?|Pkwy|Parkway|Hwy|Highway|Trl|Trail|Loop|Path|Xing|Crossing|Sq(?:uare)?)\\.?";
+  const STREET_ADDRESS_RE = new RegExp(
+    // (?<![$,\d]) keeps this from starting mid-number inside a price like
+    // "$165,000" or "165000" — a real house number is never immediately
+    // preceded by a digit, comma, or dollar sign.
+    `(?<![\\$,\\d])(\\d{1,6}\\s+(?:[A-Za-z0-9.'-]+\\s+){0,4}${STREET_SUFFIX_PATTERN}(?:\\s+(?:Apt|Unit|Ste|Suite|#)\\.?\\s*[A-Za-z0-9]+)?)\\b`,
+    "i"
+  );
+  const ADDRESS_LINE_START_RE = /^\s*(\d+\s+[A-Za-z0-9 .'-]+?)(?:,|\n|$)/m;
+
   function smartParse(text){
     const out = {};
     const priceMatch = text.match(/\$\s?([\d]{1,3}(?:,\d{3})+|\d{5,7})/);
@@ -1616,10 +1644,31 @@
     const knownZip = ZIPS.map(z => z.zip).find(z => text.includes(z));
     const anyZipMatch = text.match(/\b\d{5}\b/);
     out.postalCode = knownZip || (anyZipMatch ? anyZipMatch[0] : "");
-    const addrMatch = text.match(/^\s*(\d+\s+[A-Za-z0-9 .'-]+?)(?:,|\n|$)/m);
-    if (addrMatch) out.addrLine = addrMatch[1].trim();
-    const cityMatch = text.match(/,\s*([A-Za-z .'-]+?),\s*IN\b/);
-    if (cityMatch) out.city = cityMatch[1].trim();
+
+    // Normalize line breaks to spaces first so the suffix search isn't
+    // thrown off by exactly where OCR happened to wrap a line.
+    const cleaned = text.replace(/\s*\n\s*/g, " ");
+    const addrMatch = cleaned.match(STREET_ADDRESS_RE);
+    if (addrMatch) {
+      out.addrLine = addrMatch[1].trim().replace(/\s+/g, " ");
+      // City is whatever plain-word text immediately follows the matched
+      // street address, up to the next comma, digit (zip/bed count), or a
+      // 2-letter state code — works whether or not a state/zip follows at
+      // all, which many listing-card screenshots omit entirely.
+      const rest = cleaned.slice(addrMatch.index + addrMatch[0].length);
+      const cityMatch = rest.match(/^[\s,]+([A-Za-z .'-]+?)(?=,|\s+\d|\s+[A-Z]{2}\b|\s*$)/);
+      if (cityMatch) out.city = cityMatch[1].trim();
+    } else {
+      // Fallback for addresses with no recognizable street-suffix word
+      // (rare — e.g. a rural route). Less reliable, so it's a last resort.
+      const lineMatch = text.match(ADDRESS_LINE_START_RE);
+      if (lineMatch) out.addrLine = lineMatch[1].trim().replace(/\s+/g, " ");
+    }
+    if (!out.city) {
+      const cityMatch2 = text.match(/,\s*([A-Za-z .'-]+?),\s*IN\b/);
+      if (cityMatch2) out.city = cityMatch2[1].trim();
+    }
+
     const urlMatch = text.match(/https?:\/\/\S+/);
     if (urlMatch) out.sourceUrl = urlMatch[0];
     return out;
