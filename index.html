@@ -489,7 +489,8 @@
           </div>
           <div class="field" id="pZipIndyWrap">
             <label for="pZip">ZIP*</label>
-            <select id="pZip" required></select>
+            <input type="text" id="pZip" required inputmode="numeric" placeholder="46219" list="pZipDatalist" autocomplete="off">
+            <datalist id="pZipDatalist"></datalist>
           </div>
           <div class="field" id="pZipFlWrap" style="display:none;">
             <label for="pZipFl">ZIP*</label>
@@ -1371,31 +1372,20 @@
   wireFilterAndSort("properties");
   wireFilterAndSort("florida");
 
-  // ---------- Property ZIP select (shared by form) ----------
+  // ---------- Property ZIP field (shared by form) ----------
+  // A free-text input (not a <select>) so any ZIP can be typed in, not just
+  // the curated Indianapolis list — the datalist below just offers those as
+  // autocomplete suggestions with their investment grade for convenience.
   const pZipSelect = document.getElementById("pZip");
-  // A real <option selected> placeholder — not just "leave the select
-  // alone" — so a fresh/reset form shows nothing chosen instead of
-  // silently defaulting to the first curated zip (46219). That default
-  // was easy to miss and submit as wrong data whenever Smart Paste or OCR
-  // didn't find a zip in the source text.
-  const pZipPlaceholder = document.createElement("option");
-  pZipPlaceholder.value = "";
-  pZipPlaceholder.textContent = "Select ZIP...";
-  pZipPlaceholder.disabled = true;
-  pZipPlaceholder.setAttribute("selected", "selected");
-  pZipSelect.appendChild(pZipPlaceholder);
+  const pZipDatalist = document.getElementById("pZipDatalist");
   ZIPS.forEach(z => {
     const opt = document.createElement("option");
     opt.value = z.zip;
     opt.textContent = `${z.zip} — ${z.name} (${z.grade})`;
-    pZipSelect.appendChild(opt);
+    pZipDatalist.appendChild(opt);
   });
-  const otherZipOpt = document.createElement("option");
-  otherZipOpt.value = "";
-  otherZipOpt.textContent = "Other (type below)";
-  pZipSelect.appendChild(otherZipOpt);
-  pZipSelect.addEventListener("change", () => {
-    const meta = ZIP_MAP[pZipSelect.value];
+  pZipSelect.addEventListener("input", () => {
+    const meta = ZIP_MAP[pZipSelect.value.trim()];
     if (meta) document.getElementById("pNeighborhood").value = meta.name;
   });
 
