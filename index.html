@@ -1185,6 +1185,20 @@
     };
   }
 
+  // Puts a raw Firestore document into the exact same shape buildCloudState()
+  // produces for the local state, so the two can be compared with a plain
+  // JSON.stringify equality check (same key order, same defaults merged in).
+  function normalizeCloudState(data){
+    return {
+      properties: data.properties || [],
+      assumptions: Object.assign({}, DEFAULT_ASSUMPTIONS, data.assumptions || {}),
+      hiddenZips: data.hiddenZips || [],
+      floridaAssumptions: Object.assign({}, DEFAULT_FL_ASSUMPTIONS, data.floridaAssumptions || {}),
+      flHiddenZips: data.flHiddenZips || [],
+      notes: data.notes || "",
+    };
+  }
+
   function schedulePushToCloud(){
     if (!cloudUser || !firebaseReady) return;
     clearTimeout(cloudPushTimer);
@@ -1239,7 +1253,22 @@
         const cloudData = snap.exists() ? snap.data() : null;
         const cloudHasData = !!(cloudData && ((cloudData.properties && cloudData.properties.length > 0) || (cloudData.notes && cloudData.notes.trim() !== "")));
 
-        if (cloudHasData && localHasData) {
+        // Once this device and the cloud actually agree, every later load
+        // still has "both have data" true forever — so without this check
+        // the conflict prompt would reappear on every single page open,
+        // even though there's nothing left to reconcile. Only prompt when
+        // the two sides have actually diverged. hiddenZips/flHiddenZips are
+        // unordered sets, so sort them before comparing — otherwise a
+        // harmless order difference would look like a real conflict.
+        const forCompare = (state) => Object.assign({}, state, {
+          hiddenZips: [...state.hiddenZips].sort(), flHiddenZips: [...state.flHiddenZips].sort(),
+        });
+        const alreadyInSync = cloudHasData && localHasData &&
+          JSON.stringify(forCompare(buildCloudState())) === JSON.stringify(forCompare(normalizeCloudState(cloudData)));
+
+        if (alreadyInSync) {
+          lastSyncedSnapshot = JSON.stringify(buildCloudState());
+        } else if (cloudHasData && localHasData) {
           const useCloud = confirm(
             "Cloud data found for your account, and this device also has local data.\n\n" +
             "Click OK to use the CLOUD version (recommended if you've synced from another device before).\n" +
