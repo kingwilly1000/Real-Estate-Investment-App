@@ -1199,6 +1199,37 @@
     };
   }
 
+  // JSON.stringify that ignores object key order (recursively) and treats
+  // hiddenZips-style arrays of strings as unordered. Firestore hands back
+  // map fields in a different key order than we wrote them, so a plain
+  // JSON.stringify comparison reports "different" even when nothing is.
+  function stableStringify(v){
+    if (Array.isArray(v)) {
+      const items = v.map(stableStringify);
+      return "[" + (v.every(x => typeof x === "string") ? items.sort() : items).join(",") + "]";
+    }
+    if (v && typeof v === "object") {
+      return "{" + Object.keys(v).sort().filter(k => v[k] !== undefined)
+        .map(k => JSON.stringify(k) + ":" + stableStringify(v[k])).join(",") + "}";
+    }
+    return JSON.stringify(v);
+  }
+
+  // Combines this device's data with the cloud's without losing anything:
+  // every property from either side is kept (cloud's copy wins if both have
+  // the same id), settings come from the cloud, and if the notes differ the
+  // local notes are appended under a divider instead of being dropped.
+  function mergeLocalIntoCloud(cloudData){
+    const cloud = normalizeCloudState(cloudData);
+    const cloudIds = new Set(cloud.properties.map(p => p.id));
+    const localOnly = properties.filter(p => !cloudIds.has(p.id));
+    const localNotes = notesTextarea.value.trim();
+    const notes = (localNotes && localNotes !== cloud.notes.trim())
+      ? (cloud.notes ? cloud.notes + "\n\n--- from this device ---\n" : "") + notesTextarea.value
+      : cloud.notes;
+    return { merged: Object.assign({}, cloud, { properties: cloud.properties.concat(localOnly), notes }), localOnlyCount: localOnly.length };
+  }
+
   function schedulePushToCloud(){
     if (!cloudUser || !firebaseReady) return;
     clearTimeout(cloudPushTimer);
@@ -1260,22 +1291,18 @@
         // the two sides have actually diverged. hiddenZips/flHiddenZips are
         // unordered sets, so sort them before comparing — otherwise a
         // harmless order difference would look like a real conflict.
-        const forCompare = (state) => Object.assign({}, state, {
-          hiddenZips: [...state.hiddenZips].sort(), flHiddenZips: [...state.flHiddenZips].sort(),
-        });
         const alreadyInSync = cloudHasData && localHasData &&
-          JSON.stringify(forCompare(buildCloudState())) === JSON.stringify(forCompare(normalizeCloudState(cloudData)));
+          stableStringify(buildCloudState()) === stableStringify(normalizeCloudState(cloudData));
 
         if (alreadyInSync) {
           lastSyncedSnapshot = JSON.stringify(buildCloudState());
         } else if (cloudHasData && localHasData) {
-          const useCloud = confirm(
-            "Cloud data found for your account, and this device also has local data.\n\n" +
-            "Click OK to use the CLOUD version (recommended if you've synced from another device before).\n" +
-            "Click Cancel to KEEP THIS DEVICE'S data and overwrite the cloud with it."
-          );
-          if (useCloud) applyCloudState(cloudData);
-          else pushToCloud();
+          // Both sides have data and they differ: merge instead of asking,
+          // so nothing is lost and no pop-up appears.
+          const { merged, localOnlyCount } = mergeLocalIntoCloud(cloudData);
+          applyCloudState(merged);
+          pushToCloud();
+          if (localOnlyCount > 0) showBanner("info", `Merged ${localOnlyCount} propert${localOnlyCount === 1 ? "y" : "ies"} from this device into your cloud data.`);
         } else if (cloudHasData) {
           applyCloudState(cloudData);
         } else if (localHasData) {
@@ -1289,11 +1316,7 @@
       // nothing actually changed since what we already have.
       if (snap.metadata.hasPendingWrites || !snap.exists()) return;
       const cloudData = snap.data();
-      const json = JSON.stringify({
-        properties: cloudData.properties || [], assumptions: cloudData.assumptions || {},
-        hiddenZips: cloudData.hiddenZips || [], notes: cloudData.notes || "",
-      });
-      if (json === lastSyncedSnapshot) return;
+      if (stableStringify(normalizeCloudState(cloudData)) === stableStringify(buildCloudState())) return;
       applyCloudState(cloudData);
       syncStatusText.textContent = `Signed in as ${user.email} — Updated from another device`;
     }, (err) => {
