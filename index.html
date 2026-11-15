@@ -301,6 +301,7 @@
     <div class="top-tabs" id="topTabs">
       <button class="top-tab active" data-tab="properties">Indianapolis</button>
       <button class="top-tab" data-tab="florida">Florida</button>
+      <button class="top-tab" data-tab="newconstruction">New Construction</button>
       <button class="top-tab" data-tab="notes">Notes</button>
     </div>
     <div class="action-bar" id="propertiesActionBar">
@@ -418,6 +419,60 @@
     <div class="empty-state">
       No Florida properties tracked yet.
       <br><button class="primary" id="flEmptyAddBtn">+ Add your first Florida property</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="container" id="ncView" style="display:none;">
+
+  <div class="stats-bar">
+    <div class="stat"><div class="num" id="ncStatTotal">0</div><div class="label">Tracked</div></div>
+    <div class="stat"><div class="num" id="ncStatStrong">0</div><div class="label">Strong Buys</div></div>
+    <div class="stat"><div class="num" id="ncStatAvgCF">$0</div><div class="label">Avg Cash Flow</div></div>
+    <div class="stat"><div class="num" id="ncStatAvgCoC">0%</div><div class="label">Avg CoC Return</div></div>
+    <div class="stat"><div class="num" id="ncStatSaved">0</div><div class="label">Saved</div></div>
+  </div>
+
+  <div class="controls">
+    <div class="control-group">
+      <div class="gl">Filter</div>
+      <div class="btn-row" id="ncFilterRow">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="strong">Strong Buy</button>
+        <button class="filter-btn" data-filter="worth">Worth a Look</button>
+        <button class="filter-btn" data-filter="saved">Saved</button>
+        <button class="filter-btn" data-filter="new">Added Today</button>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="gl">Sort</div>
+      <select id="ncSortSelect">
+        <option value="newest" selected>Newest Added</option>
+        <option value="score">Tests Passed</option>
+        <option value="cashflow">Cash Flow (high to low)</option>
+        <option value="coc">Cash-on-Cash (high to low)</option>
+        <option value="price_asc">Price (low to high)</option>
+        <option value="price_desc">Price (high to low)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="control-group" style="margin-top:14px;" id="ncZipSection">
+    <div class="zip-head">
+      <div class="gl">ZIP Codes</div>
+      <div class="zip-quick">
+        <button id="ncZipAllBtn">All</button>
+        <button id="ncZipNoneBtn">None</button>
+      </div>
+    </div>
+    <div class="zip-toggles" id="ncZipToggles"></div>
+  </div>
+
+  <div id="ncContent">
+    <div class="empty-state">
+      No New Construction properties tracked yet.
+      <br><button class="primary" id="ncEmptyAddBtn">+ Add your first New Construction property</button>
     </div>
   </div>
 
@@ -802,10 +857,44 @@
     maxAllInCost: 300000,
   });
 
+  // New Construction: a separate market for builder-new homes (e.g. the
+  // Lennar / D.R. Horton investor flyer). Starting values are PLACEHOLDERS
+  // to replace with your real loan quote and numbers:
+  //  - 5.875% = the flyer's Lennar 30-yr fixed rate at 25% down (Nov 3, 2026).
+  //  - Maintenance/capex at 4% each (half the resale defaults) is an
+  //    ASSUMPTION for a brand-new home under builder warranty, not a builder
+  //    figure.
+  //  - Property management is 0% because the plan is to self-manage; that
+  //    saves the fee, not the work. Set it back to ~9% if you hire a manager.
+  //  - Buy criteria match Indianapolis except the all-in cost cap, raised to
+  //    $375k so new-build prices aren't failed automatically.
+  const DEFAULT_NC_ASSUMPTIONS = Object.assign({}, {
+    downPaymentPct: 0.25,
+    interestRate: 0.05875,
+    loanTermYears: 30,
+    closingCostsPct: 0.03,
+    reservesAtClose: 5000,
+    vacancyPct: 0.08,
+    pmPct: 0,
+    maintenancePct: 0.04,
+    capexPct: 0.04,
+    leasingPct: 0.04,
+    appreciationPct: 0.03,
+    taxEstimatePct: 0.017,
+    insuranceEstimatePct: 0.009,
+    minMonthlyCashFlow: 200,
+    minCoCReturn: 0.08,
+    minCapRate: 0.07,
+    minDSCR: 1.25,
+    min1PctRule: 0.009,
+    maxAllInCost: 375000,
+  });
+
   // Per-market config driving which properties/state/zip-UI a tab uses.
   const MARKETS = {
     indy: { label: "Indianapolis", stateCode: "IN", defaultCity: "Indianapolis", curatedZips: true },
     fl:   { label: "Florida",      stateCode: "FL", defaultCity: "",             curatedZips: false },
+    nc:   { label: "New Construction", stateCode: "IN", defaultCity: "",         curatedZips: false },
   };
 
   const LS = {
@@ -814,6 +903,8 @@
     hiddenZips: "iuw_hiddenZips",
     flAssumptions: "iuw_fl_assumptions",
     flHiddenZips: "iuw_fl_hiddenZips",
+    ncAssumptions: "iuw_nc_assumptions",
+    ncHiddenZips: "iuw_nc_hiddenZips",
     notes: "iuw_notes",
   };
 
@@ -824,18 +915,23 @@
   let properties = loadProperties();
   let assumptions = loadAssumptions();
   let floridaAssumptions = loadFloridaAssumptions();
+  let newConstructionAssumptions = loadNewConstructionAssumptions();
   let hiddenZips = loadSet(LS.hiddenZips);
   let flHiddenZips = loadSet(LS.flHiddenZips);
+  let ncHiddenZips = loadSet(LS.ncHiddenZips);
   let currentFilter = "all";
   let currentSort = "newest";
   let flCurrentFilter = "all";
   let flCurrentSort = "newest";
+  let ncCurrentFilter = "all";
+  let ncCurrentSort = "newest";
   let editingId = null;
   let activeTab = "properties"; // "properties" (indy) | "florida" | "notes"
 
-  function propertyMarket(p){ return p && p.market === "fl" ? "fl" : "indy"; }
-  function assumptionsForMarket(market){ return market === "fl" ? floridaAssumptions : assumptions; }
-  function tabMarket(tab){ return tab === "florida" ? "fl" : "indy"; }
+  function propertyMarket(p){ return p && p.market === "fl" ? "fl" : (p && p.market === "nc" ? "nc" : "indy"); }
+  function assumptionsForMarket(market){ return market === "fl" ? floridaAssumptions : (market === "nc" ? newConstructionAssumptions : assumptions); }
+  function tabMarket(tab){ return tab === "florida" ? "fl" : (tab === "newconstruction" ? "nc" : "indy"); }
+  function tabForMarket(market){ return market === "fl" ? "florida" : (market === "nc" ? "newconstruction" : "properties"); }
 
   function loadSet(key){
     try { return new Set(JSON.parse(localStorage.getItem(key) || "[]")); }
@@ -843,7 +939,7 @@
   }
   function saveSet(key, set){
     localStorage.setItem(key, JSON.stringify(Array.from(set)));
-    if (key === LS.hiddenZips || key === LS.flHiddenZips) schedulePushToCloud();
+    if (key === LS.hiddenZips || key === LS.flHiddenZips || key === LS.ncHiddenZips) schedulePushToCloud();
   }
   function loadProperties(){
     try { return JSON.parse(localStorage.getItem(LS.properties) || "[]"); }
@@ -871,6 +967,16 @@
   }
   function saveFloridaAssumptions(){
     localStorage.setItem(LS.flAssumptions, JSON.stringify(floridaAssumptions));
+    schedulePushToCloud();
+  }
+  function loadNewConstructionAssumptions(){
+    try {
+      const stored = JSON.parse(localStorage.getItem(LS.ncAssumptions) || "null");
+      return stored ? Object.assign({}, DEFAULT_NC_ASSUMPTIONS, stored) : Object.assign({}, DEFAULT_NC_ASSUMPTIONS);
+    } catch(e){ return Object.assign({}, DEFAULT_NC_ASSUMPTIONS); }
+  }
+  function saveNewConstructionAssumptions(){
+    localStorage.setItem(LS.ncAssumptions, JSON.stringify(newConstructionAssumptions));
     schedulePushToCloud();
   }
 
@@ -1025,6 +1131,12 @@
   const flSortSelect = document.getElementById("flSortSelect");
   const flEmptyAddBtn = document.getElementById("flEmptyAddBtn");
 
+  const ncContent = document.getElementById("ncContent");
+  const ncZipTogglesEl = document.getElementById("ncZipToggles");
+  const ncZipSection = document.getElementById("ncZipSection");
+  const ncSortSelect = document.getElementById("ncSortSelect");
+  const ncEmptyAddBtn = document.getElementById("ncEmptyAddBtn");
+
   // Per-tab context: which DOM elements, market, and filter/sort/hiddenZips
   // state a given properties tab ("properties" = Indianapolis, or
   // "florida") reads and writes. Every render/filter/sort/zip function
@@ -1041,6 +1153,18 @@
         hiddenZipsKey: LS.flHiddenZips,
         statTotal: "flStatTotal", statStrong: "flStatStrong", statAvgCF: "flStatAvgCF", statAvgCoC: "flStatAvgCoC", statSaved: "flStatSaved",
         filterRowId: "flFilterRow", emptyAddBtn: flEmptyAddBtn,
+      };
+    }
+    if (tab === "newconstruction") {
+      return {
+        market: "nc", content: ncContent, zipTogglesEl: ncZipTogglesEl, zipSection: ncZipSection,
+        sortSelect: ncSortSelect,
+        getFilter: () => ncCurrentFilter, setFilter: (v) => { ncCurrentFilter = v; },
+        getSort: () => ncCurrentSort, setSort: (v) => { ncCurrentSort = v; },
+        getHiddenZips: () => ncHiddenZips, setHiddenZips: (s) => { ncHiddenZips = s; },
+        hiddenZipsKey: LS.ncHiddenZips,
+        statTotal: "ncStatTotal", statStrong: "ncStatStrong", statAvgCF: "ncStatAvgCF", statAvgCoC: "ncStatAvgCoC", statSaved: "ncStatSaved",
+        filterRowId: "ncFilterRow", emptyAddBtn: ncEmptyAddBtn,
       };
     }
     return {
@@ -1096,6 +1220,7 @@
   const propertiesView = document.getElementById("propertiesView");
   const propertiesActionBar = document.getElementById("propertiesActionBar");
   const floridaView = document.getElementById("floridaView");
+  const ncView = document.getElementById("ncView");
   const notesView = document.getElementById("notesView");
   const notesTextarea = document.getElementById("notesTextarea");
   const notesStatus = document.getElementById("notesStatus");
@@ -1108,6 +1233,7 @@
     activeTab = btn.dataset.tab; // "properties" | "florida" | "notes"
     propertiesView.style.display = activeTab === "properties" ? "block" : "none";
     floridaView.style.display = activeTab === "florida" ? "block" : "none";
+    ncView.style.display = activeTab === "newconstruction" ? "block" : "none";
     notesView.style.display = activeTab === "notes" ? "block" : "none";
     propertiesActionBar.style.display = activeTab === "notes" ? "none" : "flex";
     if (activeTab === "notes") notesTextarea.focus();
@@ -1181,6 +1307,7 @@
     return {
       properties, assumptions, hiddenZips: Array.from(hiddenZips),
       floridaAssumptions, flHiddenZips: Array.from(flHiddenZips),
+      newConstructionAssumptions, ncHiddenZips: Array.from(ncHiddenZips),
       notes: notesTextarea.value,
     };
   }
@@ -1195,6 +1322,8 @@
       hiddenZips: data.hiddenZips || [],
       floridaAssumptions: Object.assign({}, DEFAULT_FL_ASSUMPTIONS, data.floridaAssumptions || {}),
       flHiddenZips: data.flHiddenZips || [],
+      newConstructionAssumptions: Object.assign({}, DEFAULT_NC_ASSUMPTIONS, data.newConstructionAssumptions || {}),
+      ncHiddenZips: data.ncHiddenZips || [],
       notes: data.notes || "",
     };
   }
@@ -1257,18 +1386,24 @@
     hiddenZips = new Set(data.hiddenZips || []);
     floridaAssumptions = Object.assign({}, DEFAULT_FL_ASSUMPTIONS, data.floridaAssumptions || {});
     flHiddenZips = new Set(data.flHiddenZips || []);
+    newConstructionAssumptions = Object.assign({}, DEFAULT_NC_ASSUMPTIONS, data.newConstructionAssumptions || {});
+    ncHiddenZips = new Set(data.ncHiddenZips || []);
     localStorage.setItem(LS.properties, JSON.stringify(properties));
     localStorage.setItem(LS.assumptions, JSON.stringify(assumptions));
     localStorage.setItem(LS.hiddenZips, JSON.stringify(Array.from(hiddenZips)));
     localStorage.setItem(LS.flAssumptions, JSON.stringify(floridaAssumptions));
     localStorage.setItem(LS.flHiddenZips, JSON.stringify(Array.from(flHiddenZips)));
+    localStorage.setItem(LS.ncAssumptions, JSON.stringify(newConstructionAssumptions));
+    localStorage.setItem(LS.ncHiddenZips, JSON.stringify(Array.from(ncHiddenZips)));
     notesTextarea.value = data.notes || "";
     localStorage.setItem(LS.notes, notesTextarea.value);
     lastSyncedSnapshot = JSON.stringify(buildCloudState());
     buildZipToggles("properties");
     buildZipToggles("florida");
+    buildZipToggles("newconstruction");
     render("properties");
     render("florida");
+    render("newconstruction");
   }
 
   function attachCloudListener(user){
@@ -1353,8 +1488,10 @@
   // ---------- Init ----------
   buildZipToggles("properties");
   buildZipToggles("florida");
+  buildZipToggles("newconstruction");
   render("properties");
   render("florida");
+  render("newconstruction");
 
   // ---------- Zip toggles (only zips actually in use, so this stays out of the way when empty) ----------
   // Indianapolis always shows its 8 curated target zips as quick filters
@@ -1405,6 +1542,7 @@
   }
   wireZipQuickButtons("properties", "zipAllBtn", "zipNoneBtn");
   wireZipQuickButtons("florida", "flZipAllBtn", "flZipNoneBtn");
+  wireZipQuickButtons("newconstruction", "ncZipAllBtn", "ncZipNoneBtn");
 
   // ---------- Filters / sort ----------
   function wireFilterAndSort(tab){
@@ -1423,6 +1561,7 @@
   }
   wireFilterAndSort("properties");
   wireFilterAndSort("florida");
+  wireFilterAndSort("newconstruction");
 
   // ---------- Property ZIP field (shared by form) ----------
   // A free-text input (not a <select>) so any ZIP can be typed in, not just
@@ -1452,10 +1591,14 @@
   const pTaxesHint = document.getElementById("pTaxesHint");
   const pInsuranceHint = document.getElementById("pInsuranceHint");
 
-  const TAX_HINT = () => modalMarket === "fl"
+  const TAX_HINT = () => modalMarket === "nc"
+    ? `Auto-estimated at ${fmtPct(assumptionsForMarket("nc").taxEstimatePct)} of purchase price — a placeholder. New builds are assessed at their new value (Indiana's non-homestead cap is 2%), so replace with the county's actual figure once you have it.`
+    : modalMarket === "fl"
     ? `Auto-estimated at ${fmtPct(assumptionsForMarket("fl").taxEstimatePct)} of purchase price — a rough placeholder, not a researched Florida figure. Replace with the actual figure once you have it (rates vary a lot by county).`
     : `Auto-estimated at ${fmtPct(assumptionsForMarket("indy").taxEstimatePct)} of purchase price (Indiana's non-homestead cap is 2%) — replace with the actual figure from the Marion County assessor once you have it.`;
-  const INSURANCE_HINT = () => modalMarket === "fl"
+  const INSURANCE_HINT = () => modalMarket === "nc"
+    ? `Auto-estimated at ${fmtPct(assumptionsForMarket("nc").insuranceEstimatePct)} of purchase price (rough rule of thumb) — replace with a real landlord policy quote.`
+    : modalMarket === "fl"
     ? `Auto-estimated at ${fmtPct(assumptionsForMarket("fl").insuranceEstimatePct)} of purchase price — Florida insurance is extremely location-dependent (flood zone, hurricane exposure, roof age). Get a real quote early; this placeholder could be far off.`
     : `Auto-estimated at ${fmtPct(assumptionsForMarket("indy").insuranceEstimatePct)} of purchase price (rough rule of thumb) — replace with a real landlord policy quote.`;
 
@@ -1509,7 +1652,11 @@
 
   function setModalZipMode(market){
     document.getElementById("pZipIndyWrap").style.display = market === "indy" ? "block" : "none";
-    document.getElementById("pZipFlWrap").style.display = market === "fl" ? "block" : "none";
+    document.getElementById("pZipFlWrap").style.display = market !== "indy" ? "block" : "none";
+    // The Indianapolis ZIP input is `required`; left that way while hidden it
+    // would silently block the browser from submitting the form in any other
+    // market. The submit handler already checks the visible ZIP is filled in.
+    document.getElementById("pZip").required = market === "indy";
   }
 
   function openPropModal(property, tab){
@@ -1594,7 +1741,7 @@
     e.preventDefault();
     propFormError.classList.remove("show");
     const f = (id) => document.getElementById(id).value;
-    const tab = modalMarket === "fl" ? "florida" : "properties";
+    const tab = tabForMarket(modalMarket);
 
     const zipTyped = (modalMarket === "indy" ? pZipSelect.value : f("pZipFl")).trim();
     const addr = f("pAddr").trim();
@@ -1919,8 +2066,9 @@
   assumptionsCloseBtn.addEventListener("click", closeAssumptionsModal);
   assumptionsModalOverlay.addEventListener("click", (e) => { if (e.target === assumptionsModalOverlay) closeAssumptionsModal(); });
   assumptionsResetBtn.addEventListener("click", () => {
-    const tab = assumptionsModalMarket === "fl" ? "florida" : "properties";
+    const tab = tabForMarket(assumptionsModalMarket);
     if (assumptionsModalMarket === "fl") { floridaAssumptions = Object.assign({}, DEFAULT_FL_ASSUMPTIONS); saveFloridaAssumptions(); }
+    else if (assumptionsModalMarket === "nc") { newConstructionAssumptions = Object.assign({}, DEFAULT_NC_ASSUMPTIONS); saveNewConstructionAssumptions(); }
     else { assumptions = Object.assign({}, DEFAULT_ASSUMPTIONS); saveAssumptions(); }
     openAssumptionsModal(assumptionsModalMarket);
     render(tab);
@@ -1938,8 +2086,9 @@
       minMonthlyCashFlow: f("aMinCF"), minCoCReturn: f("aMinCoC"), minCapRate: f("aMinCap"),
       minDSCR: f("aMinDscr"), min1PctRule: f("aMin1pct"), maxAllInCost: f("aMaxAllIn"),
     };
-    const tab = assumptionsModalMarket === "fl" ? "florida" : "properties";
+    const tab = tabForMarket(assumptionsModalMarket);
     if (assumptionsModalMarket === "fl") { floridaAssumptions = updated; saveFloridaAssumptions(); }
+    else if (assumptionsModalMarket === "nc") { newConstructionAssumptions = updated; saveNewConstructionAssumptions(); }
     else { assumptions = updated; saveAssumptions(); }
     render(tab);
     closeAssumptionsModal();
@@ -1999,7 +2148,7 @@
     });
     p.assumptionOverrides = overrides;
     saveProperties();
-    render(propertyMarket(p) === "fl" ? "florida" : "properties");
+    render(tabForMarket(propertyMarket(p)));
     closePropAssumptionsModal();
     const openId = detailsModalOverlay.classList.contains("show") ? p.id : null;
     if (openId) openDetailsModal(p); // refresh the numbers underneath if Details is still open
@@ -2014,7 +2163,7 @@
     if (p) {
       p.assumptionOverrides = {};
       saveProperties();
-      render(propertyMarket(p) === "fl" ? "florida" : "properties");
+      render(tabForMarket(propertyMarket(p)));
     }
   });
 
@@ -2196,7 +2345,7 @@
       if (p) {
         p.downPaymentOverride = dollar;
         saveProperties();
-        render(propertyMarket(p) === "fl" ? "florida" : "properties");
+        render(tabForMarket(propertyMarket(p)));
       }
       wiStatus.textContent = `Saved — this property now uses a custom down payment of ${fmtMoney(dollar)} instead of the Assumptions default.`;
     });
@@ -2205,7 +2354,7 @@
       if (p) {
         p.downPaymentOverride = null;
         saveProperties();
-        render(propertyMarket(p) === "fl" ? "florida" : "properties");
+        render(tabForMarket(propertyMarket(p)));
       }
       const defaultDollar = Math.round(purchasePrice * marketAssumptions.downPaymentPct);
       wiDownDollar.value = defaultDollar;
