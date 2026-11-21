@@ -237,6 +237,60 @@
     background:var(--card);color:var(--text);font-family:inherit;font-size:14.5px;line-height:1.6;resize:vertical;}
   #notesTextarea:focus{outline:none;border-color:var(--accent);}
 
+  /* ---------- Pipeline board (New / Shortlist / Passed) ---------- */
+  .seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;flex:0 0 auto;}
+  .seg button{border:none;border-radius:0;background:var(--card);padding:9px 14px;}
+  .seg button + button{border-left:1px solid var(--border);}
+  .board-tabs{display:none;gap:6px;margin-top:16px;}
+  .board-tabs button{flex:1;min-height:44px;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .board-tabs .ct, .board-head .ct{font-size:12px;font-weight:500;color:var(--text-dim);}
+  .board-tabs button.active .ct{color:#fff;}
+  .board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:20px;align-items:start;}
+  .board-col{background:var(--bg-alt);border:1px solid var(--border);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:10px;min-width:0;}
+  .board-col.drop{border-color:var(--accent);background:var(--blue-bg);}
+  .board-head{display:flex;justify-content:space-between;align-items:center;padding:2px 4px;font-size:14px;font-weight:700;}
+  .board-body{display:flex;flex-direction:column;gap:10px;}
+  .board-empty{font-size:12.5px;color:var(--text-dim);padding:16px 6px;text-align:center;}
+  .board-more{min-height:40px;font-size:12.5px;}
+  .bcard{padding:10px 12px;gap:6px;cursor:grab;}
+  .bcard.dragging{opacity:.5;}
+  .b-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .b-addr{font-size:14px;font-weight:600;line-height:1.3;min-width:0;overflow-wrap:anywhere;}
+  .b-addr .sub{display:block;font-size:12px;color:var(--text-dim);font-weight:400;margin-top:1px;}
+  .b-right{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+  .b-score{font-size:12px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;}
+  .score-80 .b-score{background:var(--green-bg);color:#5ed892;}
+  .score-60 .b-score{background:var(--blue-bg);color:#7fb0f5;}
+  .score-40 .b-score{background:var(--yellow-bg);color:#e8c96a;}
+  .score-0 .b-score{background:var(--red-bg);color:#f1a3a3;}
+  .b-badges{display:flex;gap:6px;flex-wrap:wrap;}
+  .b-tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:var(--yellow-bg);color:#e8c96a;}
+  .b-note{font-size:12px;color:var(--text-dim);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .b-price{font-size:12.5px;color:var(--text-dim);}
+  .b-price b{color:var(--text);font-size:14px;}
+  .b-cf{display:flex;justify-content:space-between;gap:8px;font-variant-numeric:tabular-nums;}
+  .b-cf .cf-box{background:none;border:none;padding:0;flex-direction:row;align-items:baseline;gap:5px;}
+  .b-cf .cf-box i{font-style:normal;font-size:12px;color:var(--text-dim);}
+  .b-cf .cf-box b{font-size:15px;}
+  .b-actions{display:flex;gap:6px;margin-top:2px;}
+  .b-actions button{flex:1;min-height:40px;padding:8px 6px;font-size:12.5px;}
+  .b-more{position:relative;}
+  .b-more summary{list-style:none;cursor:pointer;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);min-width:44px;min-height:40px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+  .b-more summary::-webkit-details-marker{display:none;}
+  .b-more[open] summary{border-color:var(--accent);}
+  .b-menu{position:absolute;right:0;top:44px;z-index:5;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:2px;min-width:130px;}
+  .b-menu button, .b-menu a{min-height:40px;text-align:left;text-decoration:none;color:var(--text);font-size:12.5px;display:flex;align-items:center;padding:8px 10px;border-radius:8px;border:1px solid transparent;background:none;}
+  .b-menu button:hover, .b-menu a:hover{background:#232838;}
+  @media (max-width:760px){
+    .board-tabs{display:flex;}
+    .board{display:block;margin-top:10px;}
+    .board-col{display:none;}
+    .board[data-active="new"] .board-col[data-col="new"],
+    .board[data-active="shortlist"] .board-col[data-col="shortlist"],
+    .board[data-active="passed"] .board-col[data-col="passed"]{display:flex;}
+    .bcard{cursor:default;}
+  }
+
   /* ---------- Phone layout (iPhone SE 375px → Pro Max 430px) ---------- */
   @media (max-width:700px){
     .container{
@@ -263,10 +317,10 @@
     .notes-head{margin-top:12px;}
     #notesTextarea{min-height:50vh;padding:12px;font-size:16px;}
 
-    .stats-bar{grid-template-columns:repeat(6,1fr);gap:5px;margin-top:12px;}
+    .stats-bar{grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px;}
     .stat{padding:8px 3px;border-radius:8px;}
     .stat .num{font-size:15px;}
-    .stat .label{font-size:8px;letter-spacing:0;margin-top:1px;line-height:1.15;}
+    .stat .label{font-size:11px;letter-spacing:0;margin-top:1px;line-height:1.2;}
 
     .controls{flex-direction:column;gap:10px;margin-top:14px;}
     .control-group{width:100%;}
@@ -309,7 +363,7 @@
 
   @media (max-width:380px){
     .stat .num{font-size:14px;}
-    .stat .label{font-size:7.5px;}
+    .stat .label{font-size:11px;}
     .zip-toggle{font-size:11px;padding:11px 6px;min-height:44px;}
   }
 </style>
@@ -329,6 +383,10 @@
     <div class="action-bar" id="propertiesActionBar">
       <button class="primary" id="addPropertyBtn">+ Add Property</button>
       <button id="assumptionsBtn">Assumptions</button>
+      <div class="seg" id="viewToggle" role="group" aria-label="Layout">
+        <button type="button" data-view="board">Board</button>
+        <button type="button" data-view="cards">Cards</button>
+      </div>
     </div>
     <div class="sync-bar">
       <button id="signInBtn" disabled>Loading sync&hellip;</button>
@@ -945,6 +1003,14 @@
   ];
   const SIMPLE_GROUP_LABELS = { bills: "Bills you pay each month", reserves: "Estimates & reserves" };
 
+  // Pipeline board stages (defined up here so the first render can use them).
+  const BOARD_COLS = [
+    { key: "new",       label: "New",       empty: "Nothing new to review." },
+    { key: "shortlist", label: "Shortlist", empty: "Shortlist a property to keep it here." },
+    { key: "passed",    label: "Passed",    empty: "Properties you pass on show up here." },
+  ];
+  const BOARD_LIMIT = 10;
+
   // Per-market config driving which properties/state/zip-UI a tab uses.
   const MARKETS = {
     indy: { label: "Indianapolis", stateCode: "IN", defaultCity: "Indianapolis", curatedZips: true },
@@ -961,6 +1027,7 @@
     ncAssumptions: "iuw_nc_assumptions",
     ncHiddenZips: "iuw_nc_hiddenZips",
     simpleItems: "iuw_simple_items",
+    view: "iuw_view",
     notes: "iuw_notes",
   };
 
@@ -976,6 +1043,9 @@
   let flHiddenZips = loadSet(LS.flHiddenZips);
   let ncHiddenZips = loadSet(LS.ncHiddenZips);
   let simpleItems = loadSimpleItems();
+  let viewMode = loadViewMode();          // "board" (default) or "cards"; a per-device preference
+  let boardActiveCol = "new";             // which stage shows on phones
+  const boardExpanded = new Set();        // "tab:column" keys the user expanded with "Show all"
   let currentFilter = "all";
   let currentSort = "newest";
   let flCurrentFilter = "all";
@@ -1065,6 +1135,10 @@
     schedulePushToCloud();
   }
   function currentSimpleItems(){ return simpleItems; }
+  function loadViewMode(){
+    try { return localStorage.getItem(LS.view) === "cards" ? "cards" : "board"; }
+    catch(e){ return "board"; }
+  }
 
   function fmtMoney(n){
     if (n === null || n === undefined || isNaN(n)) return "—";
@@ -1667,6 +1741,25 @@
   wireFilterAndSort("properties");
   wireFilterAndSort("florida");
   wireFilterAndSort("newconstruction");
+
+  // ---------- Board / Cards layout toggle ----------
+  const viewToggle = document.getElementById("viewToggle");
+  function syncViewToggle(){
+    viewToggle.querySelectorAll("button").forEach(b => b.classList.toggle("active", b.dataset.view === viewMode));
+  }
+  syncViewToggle();
+  viewToggle.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-view]");
+    if (!b || b.dataset.view === viewMode) return;
+    viewMode = b.dataset.view;
+    try { localStorage.setItem(LS.view, viewMode); } catch(err){}
+    syncViewToggle();
+    render("properties"); render("florida"); render("newconstruction");
+  });
+  // Close an open "..." menu when you click anywhere else.
+  document.addEventListener("click", (e) => {
+    document.querySelectorAll(".b-more[open]").forEach(d => { if (!d.contains(e.target)) d.removeAttribute("open"); });
+  });
 
   // ---------- Property ZIP field (shared by form) ----------
   // A free-text input (not a <select>) so any ZIP can be typed in, not just
@@ -2599,6 +2692,132 @@
     return withDeals;
   }
 
+  // ---------- Pipeline board (New / Shortlist / Passed) ----------
+
+  // A property's stage. Older properties have no stage: saved ones start in
+  // Shortlist, everything else in New. "saved" stays in step with Shortlist.
+  function propertyStatus(p){
+    if (p.status === "new" || p.status === "shortlist" || p.status === "passed") return p.status;
+    return p.saved ? "shortlist" : "new";
+  }
+  function setPropertyStatus(id, status){
+    const p = properties.find(x => x.id === id);
+    if (!p) return;
+    p.status = status;
+    p.saved = status === "shortlist";
+    saveProperties();
+    render(tabForMarket(propertyMarket(p)));
+  }
+  function boardTags(p){
+    const t = String(p.neighborhood || "").toLowerCase();
+    const tags = [];
+    if (/pending/.test(t)) tags.push("Pending");
+    if (/auction/.test(t)) tags.push("Auction");
+    if ((p.downPaymentOverride !== null && p.downPaymentOverride !== undefined) || Object.keys(p.assumptionOverrides || {}).length > 0) tags.push("Customized");
+    return tags;
+  }
+  function boardCardHtml(p, d, ctx, col){
+    const stateCode = MARKETS[ctx.market].stateCode;
+    const q = encodeURIComponent(`${p.address} ${p.city} ${stateCode} ${p.zip}`);
+    const id = escapeHtml(p.id);
+    const move = (to, label) => `<button class="move-btn" data-id="${id}" data-to="${to}">${label}</button>`;
+    const moves = col === "new" ? move("shortlist", "Shortlist") + move("passed", "Pass")
+      : col === "shortlist" ? move("passed", "Pass") + move("new", "Back to New")
+      : move("new", "Restore");
+    const tags = boardTags(p);
+    return `
+      <div class="card bcard ${scoreClass(d.testsPassed)}" draggable="true" data-id="${id}" title="Drag to another column">
+        <div class="b-top">
+          <div class="b-addr">${addressLinkHtml(p, stateCode)}<span class="sub">${escapeHtml(p.city)} ${escapeHtml(p.zip)}${p.beds ? " &middot; " + escapeHtml(p.beds) + " bd" : ""}</span></div>
+          <div class="b-right">
+            <span class="b-score" title="${escapeHtml(d.verdict)}">${d.testsPassed}/6</span>
+            <details class="b-more">
+              <summary aria-label="More actions">&hellip;</summary>
+              <div class="b-menu">
+                <button class="edit-btn" data-id="${id}">Edit</button>
+                <a href="https://www.zillow.com/homes/${q}_rb/" target="_blank" rel="noopener">Zillow</a>
+                <button class="delete-btn" data-id="${id}">Delete</button>
+              </div>
+            </details>
+          </div>
+        </div>
+        ${tags.length ? `<div class="b-badges">${tags.map(t => `<span class="b-tag">${t}</span>`).join("")}</div>` : ""}
+        ${p.neighborhood ? `<div class="b-note" title="${escapeHtml(p.neighborhood)}">${escapeHtml(p.neighborhood)}</div>` : ""}
+        <div class="b-price"><b>${fmtMoney(p.purchasePrice)}</b> &middot; rent ${fmtMoney(p.monthlyRent)}/mo</div>
+        <div class="b-cf">
+          <span class="cf-box" title="Rent minus the loan payment and the bills you pay each month"><i>Simple</i><b class="${d.simpleCashFlow >= 0 ? "pos" : "neg"}">${fmtMoney(d.simpleCashFlow)}</b></span>
+          <span class="cf-box" title="Rent minus every cost and the loan payment"><i>All-in</i><b class="${d.monthlyCashFlow >= 0 ? "pos" : "neg"}">${fmtMoney(d.monthlyCashFlow)}</b></span>
+        </div>
+        <div class="b-actions">
+          <button class="details-btn" data-id="${id}">Details</button>
+          ${moves}
+        </div>
+      </div>`;
+  }
+  function renderBoard(ctx, tab, list){
+    const groups = { new: [], shortlist: [], passed: [] };
+    list.forEach(x => groups[propertyStatus(x.p)].push(x));
+    const tabsHtml = BOARD_COLS.map(c => `<button type="button" role="tab" data-col="${c.key}" aria-selected="${boardActiveCol === c.key}" class="${boardActiveCol === c.key ? "active" : ""}">${c.label} <span class="ct">${groups[c.key].length}</span></button>`).join("");
+    const colsHtml = BOARD_COLS.map(c => {
+      const items = groups[c.key];
+      const expanded = boardExpanded.has(tab + ":" + c.key);
+      const shown = expanded ? items : items.slice(0, BOARD_LIMIT);
+      const body = shown.map(({ p, d }) => boardCardHtml(p, d, ctx, c.key)).join("") || `<div class="board-empty">${c.empty}</div>`;
+      const more = items.length > BOARD_LIMIT ? `<button type="button" class="board-more" data-col="${c.key}">${expanded ? "Show fewer" : "Show all " + items.length}</button>` : "";
+      return `<section class="board-col" data-col="${c.key}" aria-label="${c.label}"><div class="board-head"><span>${c.label}</span><span class="ct">${items.length}</span></div><div class="board-body">${body}</div>${more}</section>`;
+    }).join("");
+    ctx.content.innerHTML = `<div class="board-tabs" role="tablist" aria-label="Stage">${tabsHtml}</div><div class="board" id="grid-${tab}" data-active="${boardActiveCol}">${colsHtml}</div>`;
+    const board = document.getElementById(`grid-${tab}`);
+
+    ctx.content.querySelectorAll(".board-tabs button").forEach(b => b.addEventListener("click", () => {
+      boardActiveCol = b.dataset.col;
+      board.dataset.active = boardActiveCol;
+      ctx.content.querySelectorAll(".board-tabs button").forEach(x => {
+        const on = x === b;
+        x.classList.toggle("active", on);
+        x.setAttribute("aria-selected", String(on));
+      });
+    }));
+    board.querySelectorAll(".details-btn").forEach(btn => btn.addEventListener("click", () => {
+      const p = properties.find(x => x.id === btn.dataset.id);
+      if (p) openDetailsModal(p);
+    }));
+    board.querySelectorAll(".edit-btn").forEach(btn => btn.addEventListener("click", () => {
+      const p = properties.find(x => x.id === btn.dataset.id);
+      if (p) openPropModal(p, tab);
+    }));
+    board.querySelectorAll(".delete-btn").forEach(btn => btn.addEventListener("click", () => {
+      if (confirm("Remove this property from your tracker?")) deleteProperty(btn.dataset.id, tab);
+    }));
+    board.querySelectorAll(".move-btn").forEach(btn => btn.addEventListener("click", () => setPropertyStatus(btn.dataset.id, btn.dataset.to)));
+    board.querySelectorAll(".board-more").forEach(btn => btn.addEventListener("click", () => {
+      const key = tab + ":" + btn.dataset.col;
+      if (boardExpanded.has(key)) boardExpanded.delete(key); else boardExpanded.add(key);
+      render(tab);
+    }));
+
+    // Drag a card onto another column (desktop). The buttons do the same on touch screens.
+    board.querySelectorAll(".bcard").forEach(card => {
+      card.addEventListener("dragstart", e => {
+        e.dataTransfer.setData("text/plain", card.dataset.id);
+        e.dataTransfer.effectAllowed = "move";
+        card.classList.add("dragging");
+      });
+      card.addEventListener("dragend", () => card.classList.remove("dragging"));
+    });
+    board.querySelectorAll(".board-col").forEach(colEl => {
+      colEl.addEventListener("dragover", e => { e.preventDefault(); colEl.classList.add("drop"); });
+      colEl.addEventListener("dragleave", e => { if (!colEl.contains(e.relatedTarget)) colEl.classList.remove("drop"); });
+      colEl.addEventListener("drop", e => {
+        e.preventDefault();
+        colEl.classList.remove("drop");
+        const id = e.dataTransfer.getData("text/plain");
+        const p = properties.find(x => x.id === id);
+        if (p && propertyStatus(p) !== colEl.dataset.col) setPropertyStatus(id, colEl.dataset.col);
+      });
+    });
+  }
+
   function render(tab){
     const ctx = tabCtx(tab);
     updateStats(tab);
@@ -2615,6 +2834,8 @@
       ctx.content.innerHTML = '<div class="empty-state">No properties match the current filters.</div>';
       return;
     }
+
+    if (viewMode === "board") { renderBoard(ctx, tab, list); return; }
 
     ctx.content.innerHTML = `<div class="grid" id="grid-${tab}"></div>`;
     const grid = document.getElementById(`grid-${tab}`);
@@ -2682,7 +2903,7 @@
     grid.querySelectorAll(".save-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         const p = properties.find(x => x.id === btn.dataset.id);
-        if (p) { p.saved = !p.saved; saveProperties(); render(tab); }
+        if (p) setPropertyStatus(p.id, p.saved ? "new" : "shortlist");
       });
     });
     grid.querySelectorAll(".details-btn").forEach(btn => {
