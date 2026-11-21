@@ -118,6 +118,8 @@
   .cf-box b.neg{color:#f1a3a3;}
   .cfv-panel{background:var(--bg);border:1px solid var(--accent);border-radius:10px;padding:14px;margin-bottom:16px;}
   .cfv-panel .sec-title{color:var(--accent);border-bottom-color:var(--border);}
+  .cfv-mgmt{display:flex;gap:8px;align-items:center;font-size:13px;margin:6px 0 4px;cursor:pointer;}
+  .cfv-mgmt input{accent-color:var(--accent);width:16px;height:16px;margin:0;}
   .cfv-grp{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);margin:10px 0 2px;}
   .cfv-row{display:grid;grid-template-columns:24px 1fr auto;align-items:center;gap:8px;padding:5px 0;font-size:13px;border-bottom:1px solid var(--border);cursor:pointer;}
   .cfv-row.fixed{cursor:default;color:var(--text-dim);}
@@ -705,6 +707,7 @@
         <div class="form-grid">
           <div class="field"><label for="aVacancy">Vacancy Rate</label><input type="number" id="aVacancy" step="any" min="0" max="1"></div>
           <div class="field"><label for="aPm">Property Management %</label><input type="number" id="aPm" step="any" min="0" max="1"></div>
+          <div class="field"><label for="aPmOn">Charge a management fee</label><label style="display:flex;gap:8px;align-items:center;font-size:13px;"><input type="checkbox" id="aPmOn" style="width:18px;height:18px;"> Applies to Simple and All-In</label></div>
           <div class="field"><label for="aMaint">Maintenance %</label><input type="number" id="aMaint" step="any" min="0" max="1"></div>
           <div class="field"><label for="aCapex">CapEx Reserve %</label><input type="number" id="aCapex" step="any" min="0" max="1"></div>
           <div class="field"><label for="aLeasing">Leasing / Turnover %</label><input type="number" id="aLeasing" step="any" min="0" max="1"></div>
@@ -809,6 +812,7 @@
   const ZIP_MAP = Object.fromEntries(ZIPS.map(z => [z.zip, z]));
 
   const DEFAULT_ASSUMPTIONS = {
+    pmEnabled: true,
     downPaymentPct: 0.25,
     interestRate: 0.0725,
     loanTermYears: 30,
@@ -860,6 +864,7 @@
   // must-replace-with-a-real-quote value, more so than anything else in
   // this app.
   const DEFAULT_FL_ASSUMPTIONS = Object.assign({}, {
+    pmEnabled: true,
     downPaymentPct: 0.25,
     interestRate: 0.0725,
     loanTermYears: 30,
@@ -888,18 +893,21 @@
   //  - Maintenance/capex at 4% each (half the resale defaults) is an
   //    ASSUMPTION for a brand-new home under builder warranty, not a builder
   //    figure.
-  //  - Property management is 0% because the plan is to self-manage; that
-  //    saves the fee, not the work. Set it back to ~9% if you hire a manager.
+  //  - The property management fee is switched OFF (no charge in Simple or
+  //    All-In) because the plan is to self-manage; that saves the fee, not
+  //    the work. Switch it on in Details or Assumptions (10% = T&H's rate for
+  //    1-2 properties) if you hire a manager.
   //  - Buy criteria match Indianapolis except the all-in cost cap, raised to
   //    $375k so new-build prices aren't failed automatically.
   const DEFAULT_NC_ASSUMPTIONS = Object.assign({}, {
+    pmEnabled: false,
     downPaymentPct: 0.25,
     interestRate: 0.05875,
     loanTermYears: 30,
     closingCostsPct: 0.03,
     reservesAtClose: 5000,
     vacancyPct: 0.08,
-    pmPct: 0,
+    pmPct: 0.10,
     maintenancePct: 0.04,
     capexPct: 0.04,
     leasingPct: 0.04,
@@ -1016,11 +1024,24 @@
     localStorage.setItem(LS.flAssumptions, JSON.stringify(floridaAssumptions));
     schedulePushToCloud();
   }
+  // Older saved New Construction settings used pmPct 0 to mean "no management
+  // fee". Treat that as the new switch being off and restore the 10% default
+  // so switching it on later doesn't charge 0%.
+  function mergeNcAssumptions(stored){
+    const s = Object.assign({}, stored || {});
+    if (s.pmEnabled === undefined && s.pmPct === 0) delete s.pmPct;
+    return Object.assign({}, DEFAULT_NC_ASSUMPTIONS, s);
+  }
   function loadNewConstructionAssumptions(){
     try {
       const stored = JSON.parse(localStorage.getItem(LS.ncAssumptions) || "null");
-      return stored ? Object.assign({}, DEFAULT_NC_ASSUMPTIONS, stored) : Object.assign({}, DEFAULT_NC_ASSUMPTIONS);
+      return mergeNcAssumptions(stored);
     } catch(e){ return Object.assign({}, DEFAULT_NC_ASSUMPTIONS); }
+  }
+  function updateMarketAssumptions(market, patch){
+    if (market === "fl") { floridaAssumptions = Object.assign({}, floridaAssumptions, patch); saveFloridaAssumptions(); }
+    else if (market === "nc") { newConstructionAssumptions = Object.assign({}, newConstructionAssumptions, patch); saveNewConstructionAssumptions(); }
+    else { assumptions = Object.assign({}, assumptions, patch); saveAssumptions(); }
   }
   function saveNewConstructionAssumptions(){
     localStorage.setItem(LS.ncAssumptions, JSON.stringify(newConstructionAssumptions));
@@ -1114,7 +1135,12 @@
 
     const monthlyTaxes = (Number(p.annualTaxes) || 0) / 12;
     const monthlyInsurance = (Number(p.annualInsurance) || 0) / 12;
-    const pm = effectiveGrossIncome * ea.pmPct;
+    // The market's management switch turns the fee off everywhere (Simple and
+    // All-In) unless this property sets its own management % override.
+    const pmOverridden = !!(p.assumptionOverrides && p.assumptionOverrides.pmPct !== undefined && p.assumptionOverrides.pmPct !== null);
+    const pmActive = ea.pmEnabled !== false || pmOverridden;
+    const pmPctEff = pmActive ? ea.pmPct : 0;
+    const pm = effectiveGrossIncome * pmPctEff;
     const maintenance = grossScheduledIncome * ea.maintenancePct;
     const capex = grossScheduledIncome * ea.capexPct;
     const leasing = grossScheduledIncome * ea.leasingPct;
@@ -1151,7 +1177,7 @@
     const discountToList = listPrice > 0 ? purchasePrice / listPrice - 1 : null;
     const grm = rent > 0 ? allInCost / (rent * 12) : 0;
 
-    const beDenominator = (1 - ea.vacancyPct) * (1 - ea.pmPct) - ea.maintenancePct - ea.capexPct - ea.leasingPct;
+    const beDenominator = (1 - ea.vacancyPct) * (1 - pmPctEff) - ea.maintenancePct - ea.capexPct - ea.leasingPct;
     const beNumerator = monthlyTaxes + monthlyInsurance + hoa + lawn + ownerUtil + misc + pi;
     const breakEvenRent = beDenominator > 0 ? beNumerator / beDenominator : null;
     const rentCushion = (breakEvenRent && breakEvenRent > 0) ? (rent / breakEvenRent - 1) : null;
@@ -1180,7 +1206,7 @@
       grossScheduledIncome, vacancyLoss, effectiveGrossIncome,
       monthlyTaxes, monthlyInsurance, pm, maintenance, capex, leasing, hoa, lawn, ownerUtil, misc,
       totalOpEx, noi, monthlyCashFlow, annualCashFlow, annualDebtService,
-      lineCosts, simpleKeys: Array.from(simpleSet), simpleCashFlow, annualSimpleCashFlow,
+      lineCosts, simpleKeys: Array.from(simpleSet), simpleCashFlow, annualSimpleCashFlow, pmActive, pmPctEff,
       cashOnCash, capRate, dscr, onePctRule, expenseRatio, pricePerSqft, rentPerSqft, discountToList, grm,
       breakEvenRent, rentCushion,
       year1Paydown, year1Appreciation, totalYear1ReturnDollar, totalYear1ReturnPct,
@@ -1396,7 +1422,7 @@
       hiddenZips: data.hiddenZips || [],
       floridaAssumptions: Object.assign({}, DEFAULT_FL_ASSUMPTIONS, data.floridaAssumptions || {}),
       flHiddenZips: data.flHiddenZips || [],
-      newConstructionAssumptions: Object.assign({}, DEFAULT_NC_ASSUMPTIONS, data.newConstructionAssumptions || {}),
+      newConstructionAssumptions: mergeNcAssumptions(data.newConstructionAssumptions),
       ncHiddenZips: data.ncHiddenZips || [],
       simpleItems: normalizeSimpleItems(data.simpleItems),
       notes: data.notes || "",
@@ -1461,7 +1487,7 @@
     hiddenZips = new Set(data.hiddenZips || []);
     floridaAssumptions = Object.assign({}, DEFAULT_FL_ASSUMPTIONS, data.floridaAssumptions || {});
     flHiddenZips = new Set(data.flHiddenZips || []);
-    newConstructionAssumptions = Object.assign({}, DEFAULT_NC_ASSUMPTIONS, data.newConstructionAssumptions || {});
+    newConstructionAssumptions = mergeNcAssumptions(data.newConstructionAssumptions);
     ncHiddenZips = new Set(data.ncHiddenZips || []);
     simpleItems = normalizeSimpleItems(data.simpleItems);
     localStorage.setItem(LS.properties, JSON.stringify(properties));
@@ -2124,6 +2150,7 @@
     f("aReserves").value = a.reservesAtClose;
     f("aVacancy").value = a.vacancyPct;
     f("aPm").value = a.pmPct;
+    document.getElementById("aPmOn").checked = a.pmEnabled !== false;
     f("aMaint").value = a.maintenancePct;
     f("aCapex").value = a.capexPct;
     f("aLeasing").value = a.leasingPct;
@@ -2157,7 +2184,7 @@
     const updated = {
       downPaymentPct: f("aDownPct"), interestRate: f("aRate"), loanTermYears: f("aTerm"),
       closingCostsPct: f("aClosingPct"), reservesAtClose: f("aReserves"),
-      vacancyPct: f("aVacancy"), pmPct: f("aPm"), maintenancePct: f("aMaint"),
+      vacancyPct: f("aVacancy"), pmPct: f("aPm"), pmEnabled: document.getElementById("aPmOn").checked, maintenancePct: f("aMaint"),
       capexPct: f("aCapex"), leasingPct: f("aLeasing"), appreciationPct: f("aAppreciation"),
       taxEstimatePct: f("aTaxPct"), insuranceEstimatePct: f("aInsurancePct"),
       minMonthlyCashFlow: f("aMinCF"), minCoCReturn: f("aMinCoC"), minCapRate: f("aMinCap"),
@@ -2245,7 +2272,7 @@
   });
 
   // ---------- Simple vs All-In cash flow panel (Details) ----------
-  function cfvPanelHtml(d){
+  function cfvPanelHtml(d, market){
     const on = new Set(d.simpleKeys);
     let rows = `<div class="cfv-row fixed"><span><input type="checkbox" checked disabled></span><span>Rent</span><span class="val pos">+${fmtMoney(d.grossScheduledIncome)}</span></div>`;
     rows += `<div class="cfv-row fixed"><span><input type="checkbox" checked disabled></span><span>Loan payment (P&amp;I)</span><span class="val">${fmtMoney(-d.pi)}</span></div>`;
@@ -2254,14 +2281,17 @@
       const amt = d.lineCosts[it.key];
       if (!it.always && !amt) return;
       if (it.group !== lastGroup) { rows += `<div class="cfv-grp">${SIMPLE_GROUP_LABELS[it.group]}</div>`; lastGroup = it.group; }
-      rows += `<label class="cfv-row"><span><input type="checkbox" data-key="${it.key}" ${on.has(it.key) ? "checked" : ""}></span><span>${it.label}</span><span class="val">${fmtMoney(-amt)}</span></label>`;
+      const off = it.key === "management" && !d.pmActive;
+      rows += `<label class="cfv-row${off ? " fixed" : ""}"><span><input type="checkbox" data-key="${it.key}" ${on.has(it.key) && !off ? "checked" : ""} ${off ? "disabled" : ""}></span><span>${it.label}${off ? " (off)" : ""}</span><span class="val">${fmtMoney(-amt)}</span></label>`;
     });
     const gap = d.simpleCashFlow - d.monthlyCashFlow;
+    const pmToggle = `<label class="cfv-mgmt"><input type="checkbox" id="cfvPmToggle" ${d.pmActive ? "checked" : ""}><span>Charge a management fee (${fmtPct(d.effectiveAssumptions.pmPct, 1)}) on ${MARKETS[market].label} properties${d.pmActive ? "" : " - off: $0 in both Simple and All-In"}</span></label>`;
     const box = (label, mo, yr) => `<div class="cf-box"><span>${label}</span><b class="${mo >= 0 ? "pos" : "neg"}">${fmtMoney(mo)}/mo</b><small>${fmtMoney(yr)}/yr</small></div>`;
     return `
       <div class="cfv-panel" id="cfvPanel">
         <div class="sec-title">Cash Flow: Simple vs. All-In</div>
         <p class="modal-sub" style="margin:0 0 8px;"><b>Simple</b> is the bills you actually pay each month. <b>All-In</b> also counts the estimates and reserves and is what the scorecard uses. Tick or untick any line to refine Simple; your choice applies to every property.</p>
+        ${pmToggle}
         ${rows}
         <div class="cf-split" style="margin-top:10px;">
           ${box("Simple", d.simpleCashFlow, d.annualSimpleCashFlow)}
@@ -2277,8 +2307,8 @@
     const panel = document.getElementById("cfvPanel");
     if (!panel) return;
     const refresh = () => {
-      const d = computeDeal(property, marketAssumptions);
-      document.getElementById("cfvPanel").outerHTML = cfvPanelHtml(d);
+      const d = computeDeal(property, assumptionsForMarket(propertyMarket(property)));
+      document.getElementById("cfvPanel").outerHTML = cfvPanelHtml(d, propertyMarket(property));
       wireCfvPanel(property, marketAssumptions);
       render("properties"); render("florida"); render("newconstruction");
       const wi = document.getElementById("wiDownDollar");
@@ -2292,6 +2322,11 @@
         saveSimpleItems();
         refresh();
       });
+    });
+    const pmToggleEl = document.getElementById("cfvPmToggle");
+    if (pmToggleEl) pmToggleEl.addEventListener("change", () => {
+      updateMarketAssumptions(propertyMarket(property), { pmEnabled: pmToggleEl.checked });
+      refresh();
     });
     document.getElementById("cfvResetBtn").addEventListener("click", () => {
       simpleItems = DEFAULT_SIMPLE_ITEMS.slice();
@@ -2318,7 +2353,7 @@
     const currentDownPct = purchasePrice > 0 ? Math.round((currentDownDollar / purchasePrice) * 100) : 0;
 
     let html = "";
-    html += cfvPanelHtml(d);
+    html += cfvPanelHtml(d, propMarket);
     html += `
       <div class="whatif-panel">
         <div class="sec-title">What-If: Down Payment</div>
@@ -2446,7 +2481,7 @@
 
     function recompute(downDollar){
       const tempProp = Object.assign({}, property, { downPaymentOverride: downDollar });
-      const d = computeDeal(tempProp, marketAssumptions);
+      const d = computeDeal(tempProp, assumptionsForMarket(propertyMarket(property)));
       wiResults.innerHTML =
         metric("Down Payment", fmtMoney(downDollar)) +
         metric("Loan Amount", fmtMoney(d.loanAmount)) +
