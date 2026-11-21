@@ -118,6 +118,8 @@
   .cf-box b.neg{color:#f1a3a3;}
   .cfv-panel{background:var(--bg);border:1px solid var(--accent);border-radius:10px;padding:14px;margin-bottom:16px;}
   .cfv-panel .sec-title{color:var(--accent);border-bottom-color:var(--border);}
+  .addr-link{color:inherit;text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:3px;}
+  .addr-link:hover{color:var(--accent);}
   .cfv-mgmt{display:flex;gap:8px;align-items:center;font-size:13px;margin:6px 0 4px;cursor:pointer;}
   .cfv-mgmt input{accent-color:var(--accent);width:16px;height:16px;margin:0;}
   .cfv-grp{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);margin:10px 0 2px;}
@@ -2271,6 +2273,23 @@
     }
   });
 
+  // ---------- Address links ----------
+  // The address links to the listing when the "MLS # / Link" field contains a
+  // web address (it can hold both, e.g. "MLS# 12345 https://..."). Otherwise it
+  // falls back to a Zillow search for the address.
+  function propertyLink(p, stateCode){
+    const m = String(p.mlsLink || "").match(/https?:\/\/[^\s"'<>]+/i);
+    if (m) return { url: m[0], direct: true };
+    const q = encodeURIComponent(`${p.address} ${p.city} ${stateCode} ${p.zip}`);
+    return { url: `https://www.zillow.com/homes/${q}_rb/`, direct: false };
+  }
+  function addressLinkHtml(p, stateCode){
+    const l = propertyLink(p, stateCode);
+    const tip = l.direct ? "Open the saved listing link"
+      : "No listing link saved - opens a Zillow search for this address. Add one under Edit > MLS # / Link.";
+    return `<a class="addr-link" href="${escapeHtml(l.url)}" target="_blank" rel="noopener" title="${escapeHtml(tip)}">${escapeHtml(p.address)}</a>`;
+  }
+
   // ---------- Simple vs All-In cash flow panel (Details) ----------
   function cfvPanelHtml(d, market){
     const on = new Set(d.simpleKeys);
@@ -2341,7 +2360,7 @@
     const marketAssumptions = assumptionsForMarket(propMarket);
     const stateCode = MARKETS[propMarket].stateCode;
     const d = computeDeal(property, marketAssumptions);
-    detailsTitle.textContent = property.address;
+    detailsTitle.innerHTML = addressLinkHtml(property, stateCode);
     detailsSub.textContent = `${property.city}, ${stateCode} ${property.zip}${property.neighborhood ? " — " + property.neighborhood : ""}`;
 
     function row(label, value, cls){ return `<div class="detail-row"><span class="lbl">${label}</span><span class="val ${cls||''}">${value}</span></div>`; }
@@ -2612,7 +2631,7 @@
       card.innerHTML = `
         ${p.photo ? `<img class="card-photo" src="${p.photo}" alt="">` : ''}
         <div class="card-top">
-          <div class="address">${escapeHtml(p.address)}
+          <div class="address">${addressLinkHtml(p, stateCode)}
             <span class="sub">${escapeHtml(p.city)}, ${stateCode} ${escapeHtml(p.zip)}${p.neighborhood ? " — " + escapeHtml(p.neighborhood) : ""}</span>
           </div>
           <div style="text-align:right;">
