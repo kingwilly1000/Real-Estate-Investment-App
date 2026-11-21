@@ -53,7 +53,7 @@
   .banner.error{background:var(--red-bg);color:#f1a3a3;border:1px solid #4a1e1e;}
   .banner.info{background:var(--blue-bg);color:#a7c6f5;border:1px solid #1c3a63;}
 
-  .stats-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:16px;}
+  .stats-bar{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:16px;}
   .stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;}
   .stat .num{font-size:20px;font-weight:700;}
   .stat .label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;margin-top:2px;}
@@ -107,6 +107,24 @@
   .metric-grid b{color:var(--text);}
   .metric-grid b.neg{color:#f1a3a3;}
   .metric-grid b.pos{color:#5ed892;}
+
+  /* Simple vs All-In cash flow */
+  .cf-split{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:2px 0 8px;}
+  .cf-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 10px;display:flex;flex-direction:column;gap:1px;}
+  .cf-box span{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);}
+  .cf-box b{font-size:16px;color:var(--text);}
+  .cf-box small{font-size:11px;color:var(--text-dim);}
+  .cf-box b.pos{color:#5ed892;}
+  .cf-box b.neg{color:#f1a3a3;}
+  .cfv-panel{background:var(--bg);border:1px solid var(--accent);border-radius:10px;padding:14px;margin-bottom:16px;}
+  .cfv-panel .sec-title{color:var(--accent);border-bottom-color:var(--border);}
+  .cfv-grp{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);margin:10px 0 2px;}
+  .cfv-row{display:grid;grid-template-columns:24px 1fr auto;align-items:center;gap:8px;padding:5px 0;font-size:13px;border-bottom:1px solid var(--border);cursor:pointer;}
+  .cfv-row.fixed{cursor:default;color:var(--text-dim);}
+  .cfv-row .val{font-weight:600;}
+  .cfv-row .val.pos{color:#5ed892;}
+  .cfv-row input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;margin:0;}
+  .cfv-foot{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:10px;font-size:12px;color:var(--text-dim);}
 
   .facts{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--text-dim);}
   .facts b{color:var(--text);}
@@ -241,7 +259,7 @@
     .notes-head{margin-top:12px;}
     #notesTextarea{min-height:50vh;padding:12px;font-size:16px;}
 
-    .stats-bar{grid-template-columns:repeat(5,1fr);gap:5px;margin-top:12px;}
+    .stats-bar{grid-template-columns:repeat(6,1fr);gap:5px;margin-top:12px;}
     .stat{padding:8px 3px;border-radius:8px;}
     .stat .num{font-size:15px;}
     .stat .label{font-size:8px;letter-spacing:0;margin-top:1px;line-height:1.15;}
@@ -321,7 +339,8 @@
   <div class="stats-bar">
     <div class="stat"><div class="num" id="statTotal">0</div><div class="label">Tracked</div></div>
     <div class="stat"><div class="num" id="statStrong">0</div><div class="label">Strong Buys</div></div>
-    <div class="stat"><div class="num" id="statAvgCF">$0</div><div class="label">Avg Cash Flow</div></div>
+    <div class="stat"><div class="num" id="statAvgSimple">$0</div><div class="label">Avg Simple CF</div></div>
+    <div class="stat"><div class="num" id="statAvgCF">$0</div><div class="label">Avg All-In CF</div></div>
     <div class="stat"><div class="num" id="statAvgCoC">0%</div><div class="label">Avg CoC Return</div></div>
     <div class="stat"><div class="num" id="statSaved">0</div><div class="label">Saved</div></div>
   </div>
@@ -342,7 +361,8 @@
       <select id="sortSelect">
         <option value="newest" selected>Newest Added</option>
         <option value="score">Tests Passed</option>
-        <option value="cashflow">Cash Flow (high to low)</option>
+        <option value="cashflow">All-In Cash Flow (high to low)</option>
+        <option value="simplecf">Simple Cash Flow (high to low)</option>
         <option value="coc">Cash-on-Cash (high to low)</option>
         <option value="price_asc">Price (low to high)</option>
         <option value="price_desc">Price (high to low)</option>
@@ -375,7 +395,8 @@
   <div class="stats-bar">
     <div class="stat"><div class="num" id="flStatTotal">0</div><div class="label">Tracked</div></div>
     <div class="stat"><div class="num" id="flStatStrong">0</div><div class="label">Strong Buys</div></div>
-    <div class="stat"><div class="num" id="flStatAvgCF">$0</div><div class="label">Avg Cash Flow</div></div>
+    <div class="stat"><div class="num" id="flStatAvgSimple">$0</div><div class="label">Avg Simple CF</div></div>
+    <div class="stat"><div class="num" id="flStatAvgCF">$0</div><div class="label">Avg All-In CF</div></div>
     <div class="stat"><div class="num" id="flStatAvgCoC">0%</div><div class="label">Avg CoC Return</div></div>
     <div class="stat"><div class="num" id="flStatSaved">0</div><div class="label">Saved</div></div>
   </div>
@@ -396,7 +417,8 @@
       <select id="flSortSelect">
         <option value="newest" selected>Newest Added</option>
         <option value="score">Tests Passed</option>
-        <option value="cashflow">Cash Flow (high to low)</option>
+        <option value="cashflow">All-In Cash Flow (high to low)</option>
+        <option value="simplecf">Simple Cash Flow (high to low)</option>
         <option value="coc">Cash-on-Cash (high to low)</option>
         <option value="price_asc">Price (low to high)</option>
         <option value="price_desc">Price (high to low)</option>
@@ -429,7 +451,8 @@
   <div class="stats-bar">
     <div class="stat"><div class="num" id="ncStatTotal">0</div><div class="label">Tracked</div></div>
     <div class="stat"><div class="num" id="ncStatStrong">0</div><div class="label">Strong Buys</div></div>
-    <div class="stat"><div class="num" id="ncStatAvgCF">$0</div><div class="label">Avg Cash Flow</div></div>
+    <div class="stat"><div class="num" id="ncStatAvgSimple">$0</div><div class="label">Avg Simple CF</div></div>
+    <div class="stat"><div class="num" id="ncStatAvgCF">$0</div><div class="label">Avg All-In CF</div></div>
     <div class="stat"><div class="num" id="ncStatAvgCoC">0%</div><div class="label">Avg CoC Return</div></div>
     <div class="stat"><div class="num" id="ncStatSaved">0</div><div class="label">Saved</div></div>
   </div>
@@ -450,7 +473,8 @@
       <select id="ncSortSelect">
         <option value="newest" selected>Newest Added</option>
         <option value="score">Tests Passed</option>
-        <option value="cashflow">Cash Flow (high to low)</option>
+        <option value="cashflow">All-In Cash Flow (high to low)</option>
+        <option value="simplecf">Simple Cash Flow (high to low)</option>
         <option value="coc">Cash-on-Cash (high to low)</option>
         <option value="price_asc">Price (low to high)</option>
         <option value="price_desc">Price (high to low)</option>
@@ -890,6 +914,27 @@
     maxAllInCost: 375000,
   });
 
+  // Cash flow is shown two ways. "Simple" is what you actually pay each
+  // month: rent minus the loan payment and the real recurring bills (taxes,
+  // insurance, management, HOA, lawn, utilities, misc) - editable in the
+  // Details view. "All-In" also subtracts the estimates and reserves (vacancy,
+  // maintenance, capex, leasing) and is what the scorecard uses.
+  const DEFAULT_SIMPLE_ITEMS = ["taxes", "insurance", "management", "hoa", "lawn", "ownerUtil", "misc"];
+  const SIMPLE_LINE_ITEMS = [
+    { key: "taxes",       label: "Property taxes",       group: "bills",    always: true },
+    { key: "insurance",   label: "Insurance",            group: "bills",    always: true },
+    { key: "management",  label: "Property management",  group: "bills",    always: true },
+    { key: "hoa",         label: "HOA",                  group: "bills",    always: false },
+    { key: "lawn",        label: "Lawn / snow / trash",  group: "bills",    always: false },
+    { key: "ownerUtil",   label: "Owner-paid utilities", group: "bills",    always: false },
+    { key: "misc",        label: "Other / misc",         group: "bills",    always: false },
+    { key: "vacancy",     label: "Vacancy",              group: "reserves", always: true },
+    { key: "maintenance", label: "Maintenance",          group: "reserves", always: true },
+    { key: "capex",       label: "CapEx reserve",        group: "reserves", always: true },
+    { key: "leasing",     label: "Leasing / turnover",   group: "reserves", always: true },
+  ];
+  const SIMPLE_GROUP_LABELS = { bills: "Bills you pay each month", reserves: "Estimates & reserves" };
+
   // Per-market config driving which properties/state/zip-UI a tab uses.
   const MARKETS = {
     indy: { label: "Indianapolis", stateCode: "IN", defaultCity: "Indianapolis", curatedZips: true },
@@ -905,6 +950,7 @@
     flHiddenZips: "iuw_fl_hiddenZips",
     ncAssumptions: "iuw_nc_assumptions",
     ncHiddenZips: "iuw_nc_hiddenZips",
+    simpleItems: "iuw_simple_items",
     notes: "iuw_notes",
   };
 
@@ -919,6 +965,7 @@
   let hiddenZips = loadSet(LS.hiddenZips);
   let flHiddenZips = loadSet(LS.flHiddenZips);
   let ncHiddenZips = loadSet(LS.ncHiddenZips);
+  let simpleItems = loadSimpleItems();
   let currentFilter = "all";
   let currentSort = "newest";
   let flCurrentFilter = "all";
@@ -979,6 +1026,22 @@
     localStorage.setItem(LS.ncAssumptions, JSON.stringify(newConstructionAssumptions));
     schedulePushToCloud();
   }
+  function normalizeSimpleItems(arr){
+    if (!Array.isArray(arr)) return DEFAULT_SIMPLE_ITEMS.slice();
+    const valid = new Set(SIMPLE_LINE_ITEMS.map(i => i.key));
+    return arr.filter(k => valid.has(k));
+  }
+  function loadSimpleItems(){
+    try {
+      const stored = localStorage.getItem(LS.simpleItems);
+      return normalizeSimpleItems(stored === null ? null : JSON.parse(stored));
+    } catch(e){ return DEFAULT_SIMPLE_ITEMS.slice(); }
+  }
+  function saveSimpleItems(){
+    localStorage.setItem(LS.simpleItems, JSON.stringify(simpleItems));
+    schedulePushToCloud();
+  }
+  function currentSimpleItems(){ return simpleItems; }
 
   function fmtMoney(n){
     if (n === null || n === undefined || isNaN(n)) return "—";
@@ -1021,7 +1084,7 @@
     return paid;
   }
 
-  function computeDeal(p, a){
+  function computeDeal(p, a, simpleKeys){
     // Per-property overrides (interest rate, vacancy%, etc. — anything set
     // via "Edit Assumptions for This Property") take precedence over the
     // shared Assumptions; any key not overridden falls through to the
@@ -1065,6 +1128,15 @@
 
     const monthlyCashFlow = noi - pi;
     const annualCashFlow = monthlyCashFlow * 12;
+
+    // Simple cash flow: rent minus only the ticked cost lines and the loan
+    // payment. Management is the same dollar figure the All-In view uses.
+    const lineCosts = { taxes: monthlyTaxes, management: pm, insurance: monthlyInsurance, vacancy: -vacancyLoss,
+      maintenance, capex, leasing, hoa, lawn, ownerUtil, misc };
+    const simpleSet = new Set(simpleKeys || currentSimpleItems());
+    const simpleCosts = Object.keys(lineCosts).filter(k => simpleSet.has(k)).reduce((s, k) => s + lineCosts[k], 0);
+    const simpleCashFlow = grossScheduledIncome - simpleCosts - pi;
+    const annualSimpleCashFlow = simpleCashFlow * 12;
     const annualDebtService = pi * 12;
 
     const cashOnCash = totalCashInvested > 0 ? annualCashFlow / totalCashInvested : 0;
@@ -1090,7 +1162,7 @@
     const totalYear1ReturnPct = totalCashInvested > 0 ? totalYear1ReturnDollar / totalCashInvested : 0;
 
     const tests = [
-      { label: "Monthly cash flow", actual: monthlyCashFlow, actualFmt: fmtMoney(monthlyCashFlow), target: a.minMonthlyCashFlow, targetFmt: fmtMoney(a.minMonthlyCashFlow), pass: monthlyCashFlow >= a.minMonthlyCashFlow },
+      { label: "Monthly cash flow (all-in)", actual: monthlyCashFlow, actualFmt: fmtMoney(monthlyCashFlow), target: a.minMonthlyCashFlow, targetFmt: fmtMoney(a.minMonthlyCashFlow), pass: monthlyCashFlow >= a.minMonthlyCashFlow },
       { label: "Cash-on-cash return", actual: cashOnCash, actualFmt: fmtPct(cashOnCash), target: a.minCoCReturn, targetFmt: fmtPct(a.minCoCReturn), pass: cashOnCash >= a.minCoCReturn },
       { label: "Cap rate", actual: capRate, actualFmt: fmtPct(capRate), target: a.minCapRate, targetFmt: fmtPct(a.minCapRate), pass: capRate >= a.minCapRate },
       { label: "DSCR", actual: dscr, actualFmt: fmtX(dscr), target: a.minDSCR, targetFmt: fmtX(a.minDSCR), pass: dscr >= a.minDSCR },
@@ -1108,6 +1180,7 @@
       grossScheduledIncome, vacancyLoss, effectiveGrossIncome,
       monthlyTaxes, monthlyInsurance, pm, maintenance, capex, leasing, hoa, lawn, ownerUtil, misc,
       totalOpEx, noi, monthlyCashFlow, annualCashFlow, annualDebtService,
+      lineCosts, simpleKeys: Array.from(simpleSet), simpleCashFlow, annualSimpleCashFlow,
       cashOnCash, capRate, dscr, onePctRule, expenseRatio, pricePerSqft, rentPerSqft, discountToList, grm,
       breakEvenRent, rentCushion,
       year1Paydown, year1Appreciation, totalYear1ReturnDollar, totalYear1ReturnPct,
@@ -1151,7 +1224,7 @@
         getSort: () => flCurrentSort, setSort: (v) => { flCurrentSort = v; },
         getHiddenZips: () => flHiddenZips, setHiddenZips: (s) => { flHiddenZips = s; },
         hiddenZipsKey: LS.flHiddenZips,
-        statTotal: "flStatTotal", statStrong: "flStatStrong", statAvgCF: "flStatAvgCF", statAvgCoC: "flStatAvgCoC", statSaved: "flStatSaved",
+        statTotal: "flStatTotal", statStrong: "flStatStrong", statAvgCF: "flStatAvgCF", statAvgSimple: "flStatAvgSimple", statAvgCoC: "flStatAvgCoC", statSaved: "flStatSaved",
         filterRowId: "flFilterRow", emptyAddBtn: flEmptyAddBtn,
       };
     }
@@ -1163,7 +1236,7 @@
         getSort: () => ncCurrentSort, setSort: (v) => { ncCurrentSort = v; },
         getHiddenZips: () => ncHiddenZips, setHiddenZips: (s) => { ncHiddenZips = s; },
         hiddenZipsKey: LS.ncHiddenZips,
-        statTotal: "ncStatTotal", statStrong: "ncStatStrong", statAvgCF: "ncStatAvgCF", statAvgCoC: "ncStatAvgCoC", statSaved: "ncStatSaved",
+        statTotal: "ncStatTotal", statStrong: "ncStatStrong", statAvgCF: "ncStatAvgCF", statAvgSimple: "ncStatAvgSimple", statAvgCoC: "ncStatAvgCoC", statSaved: "ncStatSaved",
         filterRowId: "ncFilterRow", emptyAddBtn: ncEmptyAddBtn,
       };
     }
@@ -1174,7 +1247,7 @@
       getSort: () => currentSort, setSort: (v) => { currentSort = v; },
       getHiddenZips: () => hiddenZips, setHiddenZips: (s) => { hiddenZips = s; },
       hiddenZipsKey: LS.hiddenZips,
-      statTotal: "statTotal", statStrong: "statStrong", statAvgCF: "statAvgCF", statAvgCoC: "statAvgCoC", statSaved: "statSaved",
+      statTotal: "statTotal", statStrong: "statStrong", statAvgCF: "statAvgCF", statAvgSimple: "statAvgSimple", statAvgCoC: "statAvgCoC", statSaved: "statSaved",
       filterRowId: "filterRow", emptyAddBtn: emptyAddBtn,
     };
   }
@@ -1308,6 +1381,7 @@
       properties, assumptions, hiddenZips: Array.from(hiddenZips),
       floridaAssumptions, flHiddenZips: Array.from(flHiddenZips),
       newConstructionAssumptions, ncHiddenZips: Array.from(ncHiddenZips),
+      simpleItems: simpleItems.slice(),
       notes: notesTextarea.value,
     };
   }
@@ -1324,6 +1398,7 @@
       flHiddenZips: data.flHiddenZips || [],
       newConstructionAssumptions: Object.assign({}, DEFAULT_NC_ASSUMPTIONS, data.newConstructionAssumptions || {}),
       ncHiddenZips: data.ncHiddenZips || [],
+      simpleItems: normalizeSimpleItems(data.simpleItems),
       notes: data.notes || "",
     };
   }
@@ -1388,6 +1463,7 @@
     flHiddenZips = new Set(data.flHiddenZips || []);
     newConstructionAssumptions = Object.assign({}, DEFAULT_NC_ASSUMPTIONS, data.newConstructionAssumptions || {});
     ncHiddenZips = new Set(data.ncHiddenZips || []);
+    simpleItems = normalizeSimpleItems(data.simpleItems);
     localStorage.setItem(LS.properties, JSON.stringify(properties));
     localStorage.setItem(LS.assumptions, JSON.stringify(assumptions));
     localStorage.setItem(LS.hiddenZips, JSON.stringify(Array.from(hiddenZips)));
@@ -1395,6 +1471,7 @@
     localStorage.setItem(LS.flHiddenZips, JSON.stringify(Array.from(flHiddenZips)));
     localStorage.setItem(LS.ncAssumptions, JSON.stringify(newConstructionAssumptions));
     localStorage.setItem(LS.ncHiddenZips, JSON.stringify(Array.from(ncHiddenZips)));
+    localStorage.setItem(LS.simpleItems, JSON.stringify(simpleItems));
     notesTextarea.value = data.notes || "";
     localStorage.setItem(LS.notes, notesTextarea.value);
     lastSyncedSnapshot = JSON.stringify(buildCloudState());
@@ -2167,6 +2244,62 @@
     }
   });
 
+  // ---------- Simple vs All-In cash flow panel (Details) ----------
+  function cfvPanelHtml(d){
+    const on = new Set(d.simpleKeys);
+    let rows = `<div class="cfv-row fixed"><span><input type="checkbox" checked disabled></span><span>Rent</span><span class="val pos">+${fmtMoney(d.grossScheduledIncome)}</span></div>`;
+    rows += `<div class="cfv-row fixed"><span><input type="checkbox" checked disabled></span><span>Loan payment (P&amp;I)</span><span class="val">${fmtMoney(-d.pi)}</span></div>`;
+    let lastGroup = null;
+    SIMPLE_LINE_ITEMS.forEach(it => {
+      const amt = d.lineCosts[it.key];
+      if (!it.always && !amt) return;
+      if (it.group !== lastGroup) { rows += `<div class="cfv-grp">${SIMPLE_GROUP_LABELS[it.group]}</div>`; lastGroup = it.group; }
+      rows += `<label class="cfv-row"><span><input type="checkbox" data-key="${it.key}" ${on.has(it.key) ? "checked" : ""}></span><span>${it.label}</span><span class="val">${fmtMoney(-amt)}</span></label>`;
+    });
+    const gap = d.simpleCashFlow - d.monthlyCashFlow;
+    const box = (label, mo, yr) => `<div class="cf-box"><span>${label}</span><b class="${mo >= 0 ? "pos" : "neg"}">${fmtMoney(mo)}/mo</b><small>${fmtMoney(yr)}/yr</small></div>`;
+    return `
+      <div class="cfv-panel" id="cfvPanel">
+        <div class="sec-title">Cash Flow: Simple vs. All-In</div>
+        <p class="modal-sub" style="margin:0 0 8px;"><b>Simple</b> is the bills you actually pay each month. <b>All-In</b> also counts the estimates and reserves and is what the scorecard uses. Tick or untick any line to refine Simple; your choice applies to every property.</p>
+        ${rows}
+        <div class="cf-split" style="margin-top:10px;">
+          ${box("Simple", d.simpleCashFlow, d.annualSimpleCashFlow)}
+          ${box("All-In", d.monthlyCashFlow, d.annualCashFlow)}
+        </div>
+        <div class="cfv-foot">
+          <span>Costs left out of Simple: ${fmtMoney(-gap)}/mo</span>
+          <button type="button" id="cfvResetBtn">Reset Simple to default</button>
+        </div>
+      </div>`;
+  }
+  function wireCfvPanel(property, marketAssumptions){
+    const panel = document.getElementById("cfvPanel");
+    if (!panel) return;
+    const refresh = () => {
+      const d = computeDeal(property, marketAssumptions);
+      document.getElementById("cfvPanel").outerHTML = cfvPanelHtml(d);
+      wireCfvPanel(property, marketAssumptions);
+      render("properties"); render("florida"); render("newconstruction");
+      const wi = document.getElementById("wiDownDollar");
+      if (wi) wi.dispatchEvent(new Event("input"));
+    };
+    panel.querySelectorAll("input[data-key]").forEach(cb => {
+      cb.addEventListener("change", () => {
+        simpleItems = Array.from(panel.querySelectorAll("input[data-key]"))
+          .filter(x => x.checked).map(x => x.dataset.key)
+          .concat(simpleItems.filter(k => !panel.querySelector(`input[data-key="${k}"]`)));
+        saveSimpleItems();
+        refresh();
+      });
+    });
+    document.getElementById("cfvResetBtn").addEventListener("click", () => {
+      simpleItems = DEFAULT_SIMPLE_ITEMS.slice();
+      saveSimpleItems();
+      refresh();
+    });
+  }
+
   // ---------- Details modal ----------
   function openDetailsModal(property){
     const propMarket = propertyMarket(property);
@@ -2185,6 +2318,7 @@
     const currentDownPct = purchasePrice > 0 ? Math.round((currentDownDollar / purchasePrice) * 100) : 0;
 
     let html = "";
+    html += cfvPanelHtml(d);
     html += `
       <div class="whatif-panel">
         <div class="sec-title">What-If: Down Payment</div>
@@ -2259,8 +2393,9 @@
     html += "</div>";
 
     html += section("5. Returns");
-    html += row("Monthly Cash Flow", fmtMoney(d.monthlyCashFlow), d.monthlyCashFlow >= 0 ? "pos" : "neg");
-    html += row("Annual Cash Flow", fmtMoney(d.annualCashFlow), d.annualCashFlow >= 0 ? "pos" : "neg");
+    html += row("Monthly Cash Flow (All-In)", fmtMoney(d.monthlyCashFlow), d.monthlyCashFlow >= 0 ? "pos" : "neg");
+    html += row("Annual Cash Flow (All-In)", fmtMoney(d.annualCashFlow), d.annualCashFlow >= 0 ? "pos" : "neg");
+    html += row("Monthly Cash Flow (Simple)", fmtMoney(d.simpleCashFlow), d.simpleCashFlow >= 0 ? "pos" : "neg");
     html += row("Cash-on-Cash Return", fmtPct(d.cashOnCash));
     html += row("Cap Rate (all-in basis)", fmtPct(d.capRate));
     html += row("DSCR", fmtX(d.dscr));
@@ -2288,6 +2423,7 @@
 
     detailsBody.innerHTML = html;
     wireWhatIfPanel(property, purchasePrice, marketAssumptions);
+    wireCfvPanel(property, marketAssumptions);
     document.getElementById("editPropAssumptionsBtn").addEventListener("click", () => openPropAssumptionsModal(property));
     detailsModalOverlay.classList.add("show");
   }
@@ -2315,7 +2451,8 @@
         metric("Down Payment", fmtMoney(downDollar)) +
         metric("Loan Amount", fmtMoney(d.loanAmount)) +
         metric("Monthly P&I", fmtMoney(d.pi)) +
-        metric("Monthly Cash Flow", fmtMoney(d.monthlyCashFlow), d.monthlyCashFlow >= 0 ? "pos" : "neg") +
+        metric("Simple Cash Flow", fmtMoney(d.simpleCashFlow), d.simpleCashFlow >= 0 ? "pos" : "neg") +
+        metric("All-In Cash Flow", fmtMoney(d.monthlyCashFlow), d.monthlyCashFlow >= 0 ? "pos" : "neg") +
         metric("Cash-on-Cash Return", fmtPct(d.cashOnCash)) +
         metric("DSCR", fmtX(d.dscr));
       return d;
@@ -2397,6 +2534,7 @@
     const withDeals = list.map(p => ({ p, d: computeDeal(p, a) }));
     switch (ctx.getSort()) {
       case "cashflow": withDeals.sort((a,b) => b.d.monthlyCashFlow - a.d.monthlyCashFlow); break;
+      case "simplecf": withDeals.sort((a,b) => b.d.simpleCashFlow - a.d.simpleCashFlow); break;
       case "coc": withDeals.sort((a,b) => b.d.cashOnCash - a.d.cashOnCash); break;
       case "price_asc": withDeals.sort((a,b) => a.p.purchasePrice - b.p.purchasePrice); break;
       case "price_desc": withDeals.sort((a,b) => b.p.purchasePrice - a.p.purchasePrice); break;
@@ -2459,11 +2597,19 @@
           <span class="rentinfo">All-in ${fmtMoney(d.allInCost)} &middot; Rent ${fmtMoney(p.monthlyRent)}/mo</span>
         </div>
 
+        <div class="cf-split">
+          <div class="cf-box" title="Rent minus the loan payment and the bills you pay each month (editable in Details)">
+            <span>Simple cash flow</span><b class="${d.simpleCashFlow >= 0 ? 'pos' : 'neg'}">${fmtMoney(d.simpleCashFlow)}/mo</b>
+          </div>
+          <div class="cf-box" title="Rent minus every cost and the loan payment">
+            <span>All-in cash flow</span><b class="${d.monthlyCashFlow >= 0 ? 'pos' : 'neg'}">${fmtMoney(d.monthlyCashFlow)}/mo</b>
+          </div>
+        </div>
         <div class="metric-grid">
-          <div class="m"><span>Cash Flow</span><b class="${d.monthlyCashFlow >= 0 ? 'pos' : 'neg'}">${fmtMoney(d.monthlyCashFlow)}/mo</b></div>
           <div class="m"><span>CoC Return</span><b>${fmtPct(d.cashOnCash)}</b></div>
           <div class="m"><span>Cap Rate</span><b>${fmtPct(d.capRate)}</b></div>
           <div class="m"><span>DSCR</span><b>${fmtX(d.dscr)}</b></div>
+          <div class="m"><span>1% Rule</span><b>${fmtPct(d.onePctRule, 2)}</b></div>
         </div>
 
         <div class="card-actions">
@@ -2512,12 +2658,14 @@
     const total = visible.length;
     const strong = visible.filter(x => x.d.verdictKey === "strong").length;
     const avgCF = total ? visible.reduce((s,x) => s + x.d.monthlyCashFlow, 0) / total : 0;
+    const avgSimple = total ? visible.reduce((s,x) => s + x.d.simpleCashFlow, 0) / total : 0;
     const avgCoC = total ? visible.reduce((s,x) => s + x.d.cashOnCash, 0) / total : 0;
     const saved = visible.filter(x => x.p.saved).length;
 
     document.getElementById(ctx.statTotal).textContent = total;
     document.getElementById(ctx.statStrong).textContent = strong;
     document.getElementById(ctx.statAvgCF).textContent = fmtMoney(avgCF);
+    document.getElementById(ctx.statAvgSimple).textContent = fmtMoney(avgSimple);
     document.getElementById(ctx.statAvgCoC).textContent = fmtPct(avgCoC);
     document.getElementById(ctx.statSaved).textContent = saved;
   }
