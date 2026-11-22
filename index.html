@@ -3,22 +3,61 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0f1115">
+<meta name="theme-color" content="#f4f3ee">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Indy Feed">
 <title>Indianapolis Property Feed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<script>
+(function(){try{var t=localStorage.getItem("iuw_theme");var r=document.documentElement;if(t==="light"||t==="dark")r.setAttribute("data-theme",t);var dark=t==="dark"||(t!=="light"&&window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",dark?"#1c1b19":"#f4f3ee");}catch(e){}})();
+</script>
 <style>
+  /* Palette matches the design demo: warm neutrals, flat surfaces, tinted status colours.
+     Light by default, dark when the device prefers it, or when chosen with the Theme switch. */
   :root{
-    --bg:#0f1115; --bg-alt:#161922; --card:#1b1f2a; --border:#2a2f3d;
-    --text:#e6e8ec; --text-dim:#8b93a7; --accent:#4f8cff;
-    --green:#1f9d55; --green-bg:#123321; --blue:#3877d6; --blue-bg:#101f38;
-    --yellow:#c99a1f; --yellow-bg:#2e2610; --red:#d94141; --red-bg:#331414;
+    color-scheme:light;
+    --bg:#f4f3ee; --bg-alt:#faf9f6; --card:#ffffff; --border:#e2e0d8;
+    --text:#1f1e1c; --text-dim:#66655f;
+    --accent:#185FA5; --accent-text:#185FA5; --accent-hover:#0C447C; --on-accent:#ffffff;
+    --green:#3B6D11; --green-bg:#EAF3DE; --blue:#185FA5; --blue-bg:#E6F1FB;
+    --yellow:#BA7517; --yellow-bg:#FAEEDA; --red:#A32D2D; --red-bg:#FCEBEB;
+    --pos:#3B6D11; --neg:#A32D2D; --yellow-fg:#633806; --blue-fg:#0C447C;
+    --hover:#efede6; --hover-border:#cfcdc4;
+    --yellow-bd:#E9CF9B; --red-bd:#F0B8B8; --blue-bd:#B5D4F4; --overlay:rgba(20,19,17,.45);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme:dark;
+      --bg:#1c1b19; --bg-alt:#22211f; --card:#262522; --border:#3a3935;
+      --text:#f1f0ec; --text-dim:#a8a69e;
+      --accent:#2a6fbf; --accent-text:#85B7EB; --accent-hover:#3d8ae0; --on-accent:#ffffff;
+      --green:#639922; --green-bg:#27500A; --blue:#378ADD; --blue-bg:#0C447C;
+      --yellow:#EF9F27; --yellow-bg:#633806; --red:#E24B4A; --red-bg:#791F1F;
+      --pos:#97C459; --neg:#F09595; --yellow-fg:#FAC775; --blue-fg:#B5D4F4;
+      --hover:#2f2e2a; --hover-border:#4b4a44;
+      --yellow-bd:#854F0B; --red-bd:#A32D2D; --blue-bd:#185FA5; --overlay:rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+      --bg:#1c1b19; --bg-alt:#22211f; --card:#262522; --border:#3a3935;
+      --text:#f1f0ec; --text-dim:#a8a69e;
+      --accent:#2a6fbf; --accent-text:#85B7EB; --accent-hover:#3d8ae0; --on-accent:#ffffff;
+      --green:#639922; --green-bg:#27500A; --blue:#378ADD; --blue-bg:#0C447C;
+      --yellow:#EF9F27; --yellow-bg:#633806; --red:#E24B4A; --red-bg:#791F1F;
+      --pos:#97C459; --neg:#F09595; --yellow-fg:#FAC775; --blue-fg:#B5D4F4;
+      --hover:#2f2e2a; --hover-border:#4b4a44;
+      --yellow-bd:#854F0B; --red-bd:#A32D2D; --blue-bd:#185FA5; --overlay:rgba(0,0,0,.6);
   }
   *{box-sizing:border-box;}
   html{-webkit-text-size-adjust:100%;}
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);
+  body{margin:0;font-family:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;background:var(--bg);color:var(--text);
     -webkit-tap-highlight-color:transparent;overscroll-behavior-y:none;}
+  h1,h2,h3,b,strong{font-weight:500;}
+  input,select,textarea{font-family:inherit;}
   header{background:var(--bg-alt);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;
     padding:calc(14px + env(safe-area-inset-top)) 0 12px;}
   header h1{margin:0 0 3px;font-size:20px;}
@@ -32,35 +71,35 @@
 
   .top-tabs{display:flex;gap:4px;margin-top:14px;border-bottom:1px solid var(--border);}
   .top-tab{background:none;border:none;border-radius:0;border-bottom:2px solid transparent;padding:9px 4px;margin-right:18px;
-    color:var(--text-dim);font-size:14px;font-weight:600;}
+    color:var(--text-dim);font-size:14px;font-weight:500;}
   .top-tab:hover{background:none;color:var(--text);}
-  .top-tab.active{color:var(--text);border-bottom-color:var(--accent);}
+  .top-tab.active{background:none;border-color:transparent;border-bottom-color:var(--accent);color:var(--text);}
 
   .sync-bar{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap;}
   .sync-status{font-size:11.5px;color:var(--text-dim);}
 
   .action-bar{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
   button{cursor:pointer;font-family:inherit;font-size:13px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);padding:9px 14px;transition:background .15s,border-color .15s;}
-  button:hover{background:#232838;border-color:#3a4152;}
-  button.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
-  button.primary:hover{background:#3f78e0;}
-  button.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+  button:hover{background:var(--hover);border-color:var(--hover-border);}
+  button.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);}
+  button.primary:hover{background:var(--accent-hover);}
+  button.active{background:var(--blue-bg);border-color:var(--blue-bd);color:var(--blue-fg);}
   button:disabled{opacity:.5;cursor:not-allowed;}
 
   .banner{margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13px;display:none;}
   .banner.show{display:block;}
-  .banner.warn{background:var(--yellow-bg);color:#e8c96a;border:1px solid #4a3c15;}
-  .banner.error{background:var(--red-bg);color:#f1a3a3;border:1px solid #4a1e1e;}
-  .banner.info{background:var(--blue-bg);color:#a7c6f5;border:1px solid #1c3a63;}
+  .banner.warn{background:var(--yellow-bg);color:var(--yellow-fg);border:1px solid var(--yellow-bd);}
+  .banner.error{background:var(--red-bg);color:var(--neg);border:1px solid var(--red-bd);}
+  .banner.info{background:var(--blue-bg);color:var(--blue-fg);border:1px solid var(--blue-bd);}
 
   .stats-bar{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:16px;}
-  .stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;}
-  .stat .num{font-size:20px;font-weight:700;}
-  .stat .label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;margin-top:2px;}
+  .stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;}
+  .stat .num{font-size:20px;font-weight:500;}
+  .stat .label{font-size:12px;color:var(--text-dim);margin-top:2px;}
 
   .controls{display:flex;flex-wrap:wrap;gap:16px;margin-top:18px;align-items:flex-start;}
   .control-group{display:flex;flex-direction:column;gap:6px;}
-  .control-group .gl{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;}
+  .control-group .gl{font-size:12px;color:var(--text-dim);}
   .btn-row{display:flex;gap:6px;flex-wrap:wrap;}
   select{padding:9px 10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:14px;}
 
@@ -72,61 +111,57 @@
   .zip-head .zip-quick button{font-size:11px;padding:4px 8px;}
 
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-top:20px;}
-  .card{background:var(--card);border:1px solid var(--border);border-left:4px solid var(--border);border-radius:10px;padding:14px;position:relative;display:flex;flex-direction:column;gap:8px;}
-  .card.score-80{border-left-color:var(--green);}
-  .card.score-60{border-left-color:var(--blue);}
-  .card.score-40{border-left-color:var(--yellow);}
-  .card.score-0{border-left-color:var(--red);}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;position:relative;display:flex;flex-direction:column;gap:8px;}
 
   .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
-  .score-pill{font-size:15px;font-weight:800;padding:4px 10px;border-radius:8px;flex-shrink:0;white-space:nowrap;}
-  .score-80 .score-pill{background:var(--green-bg);color:#5ed892;}
-  .score-60 .score-pill{background:var(--blue-bg);color:#7fb0f5;}
-  .score-40 .score-pill{background:var(--yellow-bg);color:#e8c96a;}
-  .score-0 .score-pill{background:var(--red-bg);color:#f1a3a3;}
-  .verdict{font-size:11px;text-transform:uppercase;letter-spacing:.03em;font-weight:700;margin-top:2px;text-align:right;}
-  .score-80 .verdict{color:#5ed892;}
-  .score-60 .verdict{color:#7fb0f5;}
-  .score-40 .verdict{color:#e8c96a;}
-  .score-0 .verdict{color:#f1a3a3;}
+  .score-pill{font-size:15px;font-weight:500;padding:4px 10px;border-radius:8px;flex-shrink:0;white-space:nowrap;}
+  .score-80 .score-pill{background:var(--green-bg);color:var(--pos);}
+  .score-60 .score-pill{background:var(--blue-bg);color:var(--blue-fg);}
+  .score-40 .score-pill{background:var(--yellow-bg);color:var(--yellow-fg);}
+  .score-0 .score-pill{background:var(--red-bg);color:var(--neg);}
+  .verdict{font-size:11px;font-weight:500;margin-top:2px;text-align:right;}
+  .score-80 .verdict{color:var(--pos);}
+  .score-60 .verdict{color:var(--blue-fg);}
+  .score-40 .verdict{color:var(--yellow-fg);}
+  .score-0 .verdict{color:var(--neg);}
 
-  .address{font-size:15px;font-weight:600;line-height:1.3;}
+  .address{font-size:15px;font-weight:500;line-height:1.3;}
   .address .sub{display:block;font-size:12px;color:var(--text-dim);font-weight:400;margin-top:2px;}
 
   .badges{display:flex;gap:6px;flex-wrap:wrap;}
-  .badge{font-size:10px;padding:3px 7px;border-radius:6px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;}
-  .badge.new{background:var(--accent);color:#fff;}
+  .badge{font-size:11px;padding:3px 7px;border-radius:6px;font-weight:500;}
+  .badge.new{background:var(--accent);color:var(--on-accent);}
   .badge.zip{background:var(--bg);border:1px solid var(--border);color:var(--text-dim);}
 
-  .price-row{font-size:19px;font-weight:700;}
+  .price-row{font-size:19px;font-weight:500;}
   .price-row .rentinfo{display:block;font-size:12px;font-weight:400;color:var(--text-dim);margin-top:2px;}
 
   .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:12.5px;color:var(--text-dim);
     border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:8px 0;}
   .metric-grid .m{display:flex;justify-content:space-between;gap:6px;}
   .metric-grid b{color:var(--text);}
-  .metric-grid b.neg{color:#f1a3a3;}
-  .metric-grid b.pos{color:#5ed892;}
+  .metric-grid b.neg{color:var(--neg);}
+  .metric-grid b.pos{color:var(--pos);}
 
   /* Simple vs All-In cash flow */
   .cf-split{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:2px 0 8px;}
   .cf-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 10px;display:flex;flex-direction:column;gap:1px;}
-  .cf-box span{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);}
+  .cf-box span{font-size:12px;color:var(--text-dim);}
   .cf-box b{font-size:16px;color:var(--text);}
   .cf-box small{font-size:11px;color:var(--text-dim);}
-  .cf-box b.pos{color:#5ed892;}
-  .cf-box b.neg{color:#f1a3a3;}
+  .cf-box b.pos{color:var(--pos);}
+  .cf-box b.neg{color:var(--neg);}
   .cfv-panel{background:var(--bg);border:1px solid var(--accent);border-radius:10px;padding:14px;margin-bottom:16px;}
-  .cfv-panel .sec-title{color:var(--accent);border-bottom-color:var(--border);}
+  .cfv-panel .sec-title{color:var(--accent-text);border-bottom-color:var(--border);}
   .addr-link{color:inherit;text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:3px;}
-  .addr-link:hover{color:var(--accent);}
+  .addr-link:hover{color:var(--accent-text);}
   .cfv-mgmt{display:flex;gap:8px;align-items:center;font-size:13px;margin:6px 0 4px;cursor:pointer;}
   .cfv-mgmt input{accent-color:var(--accent);width:16px;height:16px;margin:0;}
-  .cfv-grp{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);margin:10px 0 2px;}
+  .cfv-grp{font-size:12px;color:var(--text-dim);margin:10px 0 2px;}
   .cfv-row{display:grid;grid-template-columns:24px 1fr auto;align-items:center;gap:8px;padding:5px 0;font-size:13px;border-bottom:1px solid var(--border);cursor:pointer;}
   .cfv-row.fixed{cursor:default;color:var(--text-dim);}
-  .cfv-row .val{font-weight:600;}
-  .cfv-row .val.pos{color:#5ed892;}
+  .cfv-row .val{font-weight:500;}
+  .cfv-row .val.pos{color:var(--pos);}
   .cfv-row input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;margin:0;}
   .cfv-foot{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:10px;font-size:12px;color:var(--text-dim);}
 
@@ -136,9 +171,9 @@
   .card-actions{display:flex;gap:8px;margin-top:auto;flex-wrap:wrap;}
   .card-actions a, .card-actions button{flex:1;text-align:center;text-decoration:none;font-size:12px;padding:8px 10px;}
   .card-actions a{color:var(--text);}
-  .save-btn.saved{background:var(--yellow-bg);border-color:#4a3c15;color:#e8c96a;}
-  .delete-btn{flex:0 0 auto !important;color:#f1a3a3;}
-  .delete-btn:hover{background:var(--red-bg);border-color:#4a1e1e;}
+  .save-btn.saved{background:var(--yellow-bg);border-color:var(--yellow-bd);color:var(--yellow-fg);}
+  .delete-btn{flex:0 0 auto !important;color:var(--neg);}
+  .delete-btn:hover{background:var(--red-bg);border-color:var(--red-bd);}
 
   .empty-state{text-align:center;color:var(--text-dim);padding:60px 20px;font-size:14px;}
   .empty-state button{margin-top:14px;}
@@ -146,7 +181,7 @@
   footer{text-align:center;color:var(--text-dim);font-size:11px;padding:20px;}
 
   /* ---------- Modals (Add/Edit property, Assumptions, Details) ---------- */
-  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;
+  .modal-overlay{display:none;position:fixed;inset:0;background:var(--overlay);z-index:100;
     align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px 16px;}
   .modal-overlay.show{display:flex;}
   .modal{background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:560px;width:100%;
@@ -159,17 +194,17 @@
 
   .form-section{margin-top:16px;}
   .form-section:first-of-type{margin-top:4px;}
-  .form-section .sec-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
-    color:var(--accent);border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:10px;}
+  .form-section .sec-title{font-size:12px;font-weight:500;
+    color:var(--accent-text);border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:10px;}
 
   .smart-paste{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:14px;}
-  .smart-paste .gl{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
+  .smart-paste .gl{font-size:11px;color:var(--text-dim);margin-bottom:6px;}
   .smart-paste textarea{width:100%;min-height:70px;resize:vertical;padding:8px;border-radius:6px;border:1px solid var(--border);
     background:var(--card);color:var(--text);font-family:inherit;font-size:13px;}
   .smart-paste-actions{display:flex;justify-content:flex-end;margin-top:8px;}
 
   .shot-attach{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:14px;}
-  .shot-attach .gl{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
+  .shot-attach .gl{font-size:11px;color:var(--text-dim);margin-bottom:6px;}
   .shot-attach .hint{font-size:11px;color:var(--text-dim);margin:6px 0 0;}
   .shot-dropzone{border:1.5px dashed var(--border);border-radius:8px;padding:16px;text-align:center;cursor:pointer;
     color:var(--text-dim);font-size:12.5px;transition:border-color .15s,background .15s;}
@@ -180,42 +215,42 @@
   .shot-preview-wrap .shot-file-info{flex:1;font-size:12px;color:var(--text);}
   .shot-actions{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap;}
   .shot-ocr-status{font-size:12px;color:var(--text-dim);}
-  .shot-ocr-status.error{color:#f1a3a3;}
+  .shot-ocr-status.error{color:var(--neg);}
 
   .card-photo{width:calc(100% + 28px);margin:-14px -14px 4px;height:150px;object-fit:cover;
     border-radius:10px 10px 0 0;display:block;}
 
   .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .form-grid .full{grid-column:1 / -1;}
-  .field label{display:block;font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;}
-  .field .field-hint{display:block;font-size:10.5px;color:var(--text-dim);margin-top:3px;font-weight:400;text-transform:none;letter-spacing:0;}
+  .field label{display:block;font-size:11px;color:var(--text-dim);margin-bottom:4px;}
+  .field .field-hint{display:block;font-size:11.5px;color:var(--text-dim);margin-top:3px;font-weight:400;text-transform:none;letter-spacing:0;}
   .field input, .field select{width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--border);
     background:var(--bg);color:var(--text);font-size:14px;}
   .field input:invalid{border-color:var(--red);}
 
-  .advanced-toggle{background:none;border:none;color:var(--accent);padding:4px 0;font-size:12.5px;text-decoration:underline;}
+  .advanced-toggle{background:none;border:none;color:var(--accent-text);padding:4px 0;font-size:12.5px;text-decoration:underline;}
   .advanced-fields{display:none;}
   .advanced-fields.show{display:grid;}
 
   .modal-footer{display:flex;gap:8px;margin-top:16px;}
   .modal-footer button{flex:1;}
-  .modal-error{color:#f1a3a3;font-size:12px;margin-top:8px;display:none;}
+  .modal-error{color:var(--neg);font-size:12px;margin-top:8px;display:none;}
   .modal-error.show{display:block;}
 
   /* Details modal (read-only breakdown) */
   .detail-row{display:flex;justify-content:space-between;gap:10px;padding:5px 0;font-size:13px;border-bottom:1px solid var(--border);}
   .detail-row .lbl{color:var(--text-dim);}
-  .detail-row .val{font-weight:600;text-align:right;}
-  .detail-row.total{font-weight:700;border-bottom:2px solid var(--border);}
-  .detail-row .val.neg{color:#f1a3a3;}
-  .detail-row .val.pos{color:#5ed892;}
+  .detail-row .val{font-weight:500;text-align:right;}
+  .detail-row.total{font-weight:500;border-bottom:2px solid var(--border);}
+  .detail-row .val.neg{color:var(--neg);}
+  .detail-row .val.pos{color:var(--pos);}
 
   .test-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;font-size:13px;border-bottom:1px solid var(--border);}
   .test-row .t-label{flex:1;}
   .test-row .t-actual{color:var(--text-dim);font-size:12px;}
-  .test-pass, .test-fail{font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.03em;}
-  .test-pass{background:var(--green-bg);color:#5ed892;}
-  .test-fail{background:var(--red-bg);color:#f1a3a3;}
+  .test-pass, .test-fail{font-size:11px;font-weight:500;padding:3px 8px;border-radius:6px;}
+  .test-pass{background:var(--green-bg);color:var(--pos);}
+  .test-fail{background:var(--red-bg);color:var(--neg);}
 
   .whatif-panel{background:var(--bg);border:1px solid var(--yellow);border-radius:10px;padding:14px;margin-bottom:16px;}
   .whatif-panel .sec-title{color:var(--yellow);border-bottom-color:var(--border);}
@@ -229,7 +264,7 @@
   .whatif-footer{display:flex;gap:8px;margin-top:10px;}
   .whatif-footer button{flex:1;font-size:12.5px;padding:9px 10px;}
 
-  .badge.custom{background:var(--yellow-bg);color:#e8c96a;}
+  .badge.custom{background:var(--yellow-bg);color:var(--yellow-fg);}
 
   .notes-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-top:16px;flex-wrap:wrap;}
   .notes-status{font-size:11.5px;color:var(--text-dim);white-space:nowrap;padding-top:3px;}
@@ -241,30 +276,32 @@
   .seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;flex:0 0 auto;}
   .seg button{border:none;border-radius:0;background:var(--card);padding:9px 14px;}
   .seg button + button{border-left:1px solid var(--border);}
+  .sync-bar .seg{margin-left:auto;}
+  .seg button.active{background:var(--blue-bg);color:var(--blue-fg);}
   .board-tabs{display:none;gap:6px;margin-top:16px;}
   .board-tabs button{flex:1;min-height:44px;display:flex;align-items:center;justify-content:center;gap:6px;}
   .board-tabs .ct, .board-head .ct{font-size:12px;font-weight:500;color:var(--text-dim);}
-  .board-tabs button.active .ct{color:#fff;}
+  .board-tabs button.active .ct{color:var(--blue-fg);}
   .board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:20px;align-items:start;}
   .board-col{background:var(--bg-alt);border:1px solid var(--border);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:10px;min-width:0;}
   .board-col.drop{border-color:var(--accent);background:var(--blue-bg);}
-  .board-head{display:flex;justify-content:space-between;align-items:center;padding:2px 4px;font-size:14px;font-weight:700;}
+  .board-head{display:flex;justify-content:space-between;align-items:center;padding:2px 4px;font-size:14px;font-weight:500;}
   .board-body{display:flex;flex-direction:column;gap:10px;}
   .board-empty{font-size:12.5px;color:var(--text-dim);padding:16px 6px;text-align:center;}
   .board-more{min-height:40px;font-size:12.5px;}
   .bcard{padding:10px 12px;gap:6px;cursor:grab;}
   .bcard.dragging{opacity:.5;}
   .b-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
-  .b-addr{font-size:14px;font-weight:600;line-height:1.3;min-width:0;overflow-wrap:anywhere;}
+  .b-addr{font-size:14px;font-weight:500;line-height:1.3;min-width:0;overflow-wrap:anywhere;}
   .b-addr .sub{display:block;font-size:12px;color:var(--text-dim);font-weight:400;margin-top:1px;}
   .b-right{display:flex;align-items:center;gap:6px;flex-shrink:0;}
-  .b-score{font-size:12px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;}
-  .score-80 .b-score{background:var(--green-bg);color:#5ed892;}
-  .score-60 .b-score{background:var(--blue-bg);color:#7fb0f5;}
-  .score-40 .b-score{background:var(--yellow-bg);color:#e8c96a;}
-  .score-0 .b-score{background:var(--red-bg);color:#f1a3a3;}
+  .b-score{font-size:12px;font-weight:500;padding:3px 8px;border-radius:6px;white-space:nowrap;}
+  .score-80 .b-score{background:var(--green-bg);color:var(--pos);}
+  .score-60 .b-score{background:var(--blue-bg);color:var(--blue-fg);}
+  .score-40 .b-score{background:var(--yellow-bg);color:var(--yellow-fg);}
+  .score-0 .b-score{background:var(--red-bg);color:var(--neg);}
   .b-badges{display:flex;gap:6px;flex-wrap:wrap;}
-  .b-tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:var(--yellow-bg);color:#e8c96a;}
+  .b-tag{font-size:11px;font-weight:500;padding:2px 8px;border-radius:6px;background:var(--yellow-bg);color:var(--yellow-fg);}
   .b-note{font-size:12px;color:var(--text-dim);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
   .b-price{font-size:12.5px;color:var(--text-dim);}
   .b-price b{color:var(--text);font-size:14px;}
@@ -280,7 +317,7 @@
   .b-more[open] summary{border-color:var(--accent);}
   .b-menu{position:absolute;right:0;top:44px;z-index:5;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:2px;min-width:130px;}
   .b-menu button, .b-menu a{min-height:40px;text-align:left;text-decoration:none;color:var(--text);font-size:12.5px;display:flex;align-items:center;padding:8px 10px;border-radius:8px;border:1px solid transparent;background:none;}
-  .b-menu button:hover, .b-menu a:hover{background:#232838;}
+  .b-menu button:hover, .b-menu a:hover{background:var(--hover);}
   @media (max-width:760px){
     .board-tabs{display:flex;}
     .board{display:block;margin-top:10px;}
@@ -377,11 +414,11 @@
     <div class="top-tabs" id="topTabs">
       <button class="top-tab active" data-tab="properties">Indianapolis</button>
       <button class="top-tab" data-tab="florida">Florida</button>
-      <button class="top-tab" data-tab="newconstruction">New Construction</button>
+      <button class="top-tab" data-tab="newconstruction">New construction</button>
       <button class="top-tab" data-tab="notes">Notes</button>
     </div>
     <div class="action-bar" id="propertiesActionBar">
-      <button class="primary" id="addPropertyBtn">+ Add Property</button>
+      <button class="primary" id="addPropertyBtn">+ Add property</button>
       <button id="assumptionsBtn">Assumptions</button>
       <div class="seg" id="viewToggle" role="group" aria-label="Layout">
         <button type="button" data-view="board">Board</button>
@@ -391,6 +428,11 @@
     <div class="sync-bar">
       <button id="signInBtn" disabled>Loading sync&hellip;</button>
       <span class="sync-status" id="syncStatusText"></span>
+      <div class="seg" id="themeToggle" role="group" aria-label="Theme">
+        <button type="button" data-theme="auto">Auto</button>
+        <button type="button" data-theme="light">Light</button>
+        <button type="button" data-theme="dark">Dark</button>
+      </div>
     </div>
     <div class="banner" id="banner"></div>
   </div>
@@ -400,10 +442,10 @@
 
   <div class="stats-bar">
     <div class="stat"><div class="num" id="statTotal">0</div><div class="label">Tracked</div></div>
-    <div class="stat"><div class="num" id="statStrong">0</div><div class="label">Strong Buys</div></div>
-    <div class="stat"><div class="num" id="statAvgSimple">$0</div><div class="label">Avg Simple CF</div></div>
-    <div class="stat"><div class="num" id="statAvgCF">$0</div><div class="label">Avg All-In CF</div></div>
-    <div class="stat"><div class="num" id="statAvgCoC">0%</div><div class="label">Avg CoC Return</div></div>
+    <div class="stat"><div class="num" id="statStrong">0</div><div class="label">Strong buys</div></div>
+    <div class="stat"><div class="num" id="statAvgSimple">$0</div><div class="label">Avg simple CF</div></div>
+    <div class="stat"><div class="num" id="statAvgCF">$0</div><div class="label">Avg all-in CF</div></div>
+    <div class="stat"><div class="num" id="statAvgCoC">0%</div><div class="label">Avg CoC return</div></div>
     <div class="stat"><div class="num" id="statSaved">0</div><div class="label">Saved</div></div>
   </div>
 
@@ -412,20 +454,20 @@
       <div class="gl">Filter</div>
       <div class="btn-row" id="filterRow">
         <button class="filter-btn active" data-filter="all">All</button>
-        <button class="filter-btn" data-filter="strong">Strong Buy</button>
-        <button class="filter-btn" data-filter="worth">Worth a Look</button>
+        <button class="filter-btn" data-filter="strong">Strong buy</button>
+        <button class="filter-btn" data-filter="worth">Worth a look</button>
         <button class="filter-btn" data-filter="saved">Saved</button>
-        <button class="filter-btn" data-filter="new">Added Today</button>
+        <button class="filter-btn" data-filter="new">Added today</button>
       </div>
     </div>
     <div class="control-group">
       <div class="gl">Sort</div>
       <select id="sortSelect">
-        <option value="newest" selected>Newest Added</option>
-        <option value="score">Tests Passed</option>
-        <option value="cashflow">All-In Cash Flow (high to low)</option>
-        <option value="simplecf">Simple Cash Flow (high to low)</option>
-        <option value="coc">Cash-on-Cash (high to low)</option>
+        <option value="newest" selected>Newest added</option>
+        <option value="score">Tests passed</option>
+        <option value="cashflow">All-in cash flow (high to low)</option>
+        <option value="simplecf">Simple cash flow (high to low)</option>
+        <option value="coc">Cash-on-cash (high to low)</option>
         <option value="price_asc">Price (low to high)</option>
         <option value="price_desc">Price (high to low)</option>
       </select>
@@ -434,7 +476,7 @@
 
   <div class="control-group" style="margin-top:14px;" id="zipSection">
     <div class="zip-head">
-      <div class="gl">ZIP Codes</div>
+      <div class="gl">ZIP codes</div>
       <div class="zip-quick">
         <button id="zipAllBtn">All</button>
         <button id="zipNoneBtn">None</button>
@@ -456,10 +498,10 @@
 
   <div class="stats-bar">
     <div class="stat"><div class="num" id="flStatTotal">0</div><div class="label">Tracked</div></div>
-    <div class="stat"><div class="num" id="flStatStrong">0</div><div class="label">Strong Buys</div></div>
-    <div class="stat"><div class="num" id="flStatAvgSimple">$0</div><div class="label">Avg Simple CF</div></div>
-    <div class="stat"><div class="num" id="flStatAvgCF">$0</div><div class="label">Avg All-In CF</div></div>
-    <div class="stat"><div class="num" id="flStatAvgCoC">0%</div><div class="label">Avg CoC Return</div></div>
+    <div class="stat"><div class="num" id="flStatStrong">0</div><div class="label">Strong buys</div></div>
+    <div class="stat"><div class="num" id="flStatAvgSimple">$0</div><div class="label">Avg simple CF</div></div>
+    <div class="stat"><div class="num" id="flStatAvgCF">$0</div><div class="label">Avg all-in CF</div></div>
+    <div class="stat"><div class="num" id="flStatAvgCoC">0%</div><div class="label">Avg CoC return</div></div>
     <div class="stat"><div class="num" id="flStatSaved">0</div><div class="label">Saved</div></div>
   </div>
 
@@ -468,20 +510,20 @@
       <div class="gl">Filter</div>
       <div class="btn-row" id="flFilterRow">
         <button class="filter-btn active" data-filter="all">All</button>
-        <button class="filter-btn" data-filter="strong">Strong Buy</button>
-        <button class="filter-btn" data-filter="worth">Worth a Look</button>
+        <button class="filter-btn" data-filter="strong">Strong buy</button>
+        <button class="filter-btn" data-filter="worth">Worth a look</button>
         <button class="filter-btn" data-filter="saved">Saved</button>
-        <button class="filter-btn" data-filter="new">Added Today</button>
+        <button class="filter-btn" data-filter="new">Added today</button>
       </div>
     </div>
     <div class="control-group">
       <div class="gl">Sort</div>
       <select id="flSortSelect">
-        <option value="newest" selected>Newest Added</option>
-        <option value="score">Tests Passed</option>
-        <option value="cashflow">All-In Cash Flow (high to low)</option>
-        <option value="simplecf">Simple Cash Flow (high to low)</option>
-        <option value="coc">Cash-on-Cash (high to low)</option>
+        <option value="newest" selected>Newest added</option>
+        <option value="score">Tests passed</option>
+        <option value="cashflow">All-in cash flow (high to low)</option>
+        <option value="simplecf">Simple cash flow (high to low)</option>
+        <option value="coc">Cash-on-cash (high to low)</option>
         <option value="price_asc">Price (low to high)</option>
         <option value="price_desc">Price (high to low)</option>
       </select>
@@ -490,7 +532,7 @@
 
   <div class="control-group" style="margin-top:14px;" id="flZipSection">
     <div class="zip-head">
-      <div class="gl">ZIP Codes</div>
+      <div class="gl">ZIP codes</div>
       <div class="zip-quick">
         <button id="flZipAllBtn">All</button>
         <button id="flZipNoneBtn">None</button>
@@ -512,10 +554,10 @@
 
   <div class="stats-bar">
     <div class="stat"><div class="num" id="ncStatTotal">0</div><div class="label">Tracked</div></div>
-    <div class="stat"><div class="num" id="ncStatStrong">0</div><div class="label">Strong Buys</div></div>
-    <div class="stat"><div class="num" id="ncStatAvgSimple">$0</div><div class="label">Avg Simple CF</div></div>
-    <div class="stat"><div class="num" id="ncStatAvgCF">$0</div><div class="label">Avg All-In CF</div></div>
-    <div class="stat"><div class="num" id="ncStatAvgCoC">0%</div><div class="label">Avg CoC Return</div></div>
+    <div class="stat"><div class="num" id="ncStatStrong">0</div><div class="label">Strong buys</div></div>
+    <div class="stat"><div class="num" id="ncStatAvgSimple">$0</div><div class="label">Avg simple CF</div></div>
+    <div class="stat"><div class="num" id="ncStatAvgCF">$0</div><div class="label">Avg all-in CF</div></div>
+    <div class="stat"><div class="num" id="ncStatAvgCoC">0%</div><div class="label">Avg CoC return</div></div>
     <div class="stat"><div class="num" id="ncStatSaved">0</div><div class="label">Saved</div></div>
   </div>
 
@@ -524,20 +566,20 @@
       <div class="gl">Filter</div>
       <div class="btn-row" id="ncFilterRow">
         <button class="filter-btn active" data-filter="all">All</button>
-        <button class="filter-btn" data-filter="strong">Strong Buy</button>
-        <button class="filter-btn" data-filter="worth">Worth a Look</button>
+        <button class="filter-btn" data-filter="strong">Strong buy</button>
+        <button class="filter-btn" data-filter="worth">Worth a look</button>
         <button class="filter-btn" data-filter="saved">Saved</button>
-        <button class="filter-btn" data-filter="new">Added Today</button>
+        <button class="filter-btn" data-filter="new">Added today</button>
       </div>
     </div>
     <div class="control-group">
       <div class="gl">Sort</div>
       <select id="ncSortSelect">
-        <option value="newest" selected>Newest Added</option>
-        <option value="score">Tests Passed</option>
-        <option value="cashflow">All-In Cash Flow (high to low)</option>
-        <option value="simplecf">Simple Cash Flow (high to low)</option>
-        <option value="coc">Cash-on-Cash (high to low)</option>
+        <option value="newest" selected>Newest added</option>
+        <option value="score">Tests passed</option>
+        <option value="cashflow">All-in cash flow (high to low)</option>
+        <option value="simplecf">Simple cash flow (high to low)</option>
+        <option value="coc">Cash-on-cash (high to low)</option>
         <option value="price_asc">Price (low to high)</option>
         <option value="price_desc">Price (high to low)</option>
       </select>
@@ -546,7 +588,7 @@
 
   <div class="control-group" style="margin-top:14px;" id="ncZipSection">
     <div class="zip-head">
-      <div class="gl">ZIP Codes</div>
+      <div class="gl">ZIP codes</div>
       <div class="zip-quick">
         <button id="ncZipAllBtn">All</button>
         <button id="ncZipNoneBtn">None</button>
@@ -1028,6 +1070,7 @@
     ncHiddenZips: "iuw_nc_hiddenZips",
     simpleItems: "iuw_simple_items",
     view: "iuw_view",
+    theme: "iuw_theme",
     notes: "iuw_notes",
   };
 
@@ -1273,9 +1316,9 @@
     ];
     const testsPassed = tests.filter(t => t.pass).length;
     let verdict, verdictKey;
-    if (testsPassed === 6) { verdict = "Strong Buy"; verdictKey = "strong"; }
-    else if (testsPassed === 5) { verdict = "Worth a Look"; verdictKey = "worth"; }
-    else { verdict = "Pass on It"; verdictKey = "pass"; }
+    if (testsPassed === 6) { verdict = "Strong buy"; verdictKey = "strong"; }
+    else if (testsPassed === 5) { verdict = "Worth a look"; verdictKey = "worth"; }
+    else { verdict = "Pass on it"; verdictKey = "pass"; }
 
     return {
       allInCost, downPayment, loanAmount, closingCosts, pi, totalCashInvested,
@@ -1741,6 +1784,31 @@
   wireFilterAndSort("properties");
   wireFilterAndSort("florida");
   wireFilterAndSort("newconstruction");
+
+  // ---------- Theme (Auto / Light / Dark) ----------
+  const themeToggle = document.getElementById("themeToggle");
+  function currentTheme(){
+    try { const t = localStorage.getItem(LS.theme); return t === "light" || t === "dark" ? t : "auto"; }
+    catch(e){ return "auto"; }
+  }
+  function applyTheme(mode){
+    const root = document.documentElement;
+    if (mode === "light" || mode === "dark") root.setAttribute("data-theme", mode); else root.removeAttribute("data-theme");
+    themeToggle.querySelectorAll("button").forEach(b => b.classList.toggle("active", b.dataset.theme === mode));
+    const dark = mode === "dark" || (mode === "auto" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", dark ? "#1c1b19" : "#f4f3ee");
+  }
+  applyTheme(currentTheme());
+  themeToggle.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-theme]");
+    if (!b) return;
+    try { if (b.dataset.theme === "auto") localStorage.removeItem(LS.theme); else localStorage.setItem(LS.theme, b.dataset.theme); } catch(err){}
+    applyTheme(b.dataset.theme);
+  });
+  if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").addEventListener) {
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (currentTheme() === "auto") applyTheme("auto"); });
+  }
 
   // ---------- Board / Cards layout toggle ----------
   const viewToggle = document.getElementById("viewToggle");
